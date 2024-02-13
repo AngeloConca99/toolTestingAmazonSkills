@@ -85,7 +85,7 @@ function handleFileSelect() {
   };
 
   reader.onerror = function(event) {
-      console.error("Errore durante il caricamento del file:", reader.error);
+      console.error("Errore durante il caricamento dei file:", reader.error);
   };
 
   reader.readAsText(file);

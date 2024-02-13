@@ -106,11 +106,12 @@ private _setWebviewMessageListener(webview: vscode.Webview) {
             vscode.window.showInformationMessage(JsonFile);
             webview.postMessage({ command: 'JsonFile', files: JsonFile});
           } catch (error) {
-            vscode.window.showErrorMessage('Errore durante la ricerca dei file nel workspace: ' + error);
+            vscode.window.showErrorMessage('Errore durante la ricerca dei file : ' + error);
             
           }
           return;
       }
+
     },
     undefined,
     this._disposables
