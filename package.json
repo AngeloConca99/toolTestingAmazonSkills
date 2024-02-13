@@ -1,0 +1,58 @@
+{
+  "name": "alexa-skill-test-robustness",
+  "displayName": "Alexa-Skill-Test-Robustness",
+  "version": "0.0.1",
+  "description": "Descrizione dell'estensione",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "activationEvents": [
+    "onView:nodeDependencies"
+  ],
+  "main": "/out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "panel": [
+        {
+          "id": "package-explorer",
+          "title": "Package Explorer",
+          "icon": "/out/vscode-alt-PRFM4MOK.svg"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "alexa-skill-test-robustness.helloWorld",
+        "title": "Inizializzazione"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "node ./esbuild.js",
+    "package": "set NODE_ENV=production && node ./esbuild.js",
+    "watch": "node ./esbuild.js --watch",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.6",
+    "@types/node": "18.x",
+    "@types/vscode": "^1.85.0",
+    "@types/vscode-webview": "^1.57.5",
+    "@typescript-eslint/eslint-plugin": "^6.19.1",
+    "@typescript-eslint/parser": "^6.19.1",
+    "@vscode/test-cli": "^0.0.4",
+    "@vscode/test-electron": "^2.3.9",
+    "esbuild": "^0.20.0",
+    "eslint": "^8.56.0",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@types/html": "^1.0.4",
+    "@vscode/codicons": "^0.0.35",
+    "@vscode/webview-ui-toolkit": "^1.4.0",
+    "angular": "^1.8.3"
+  }
+}

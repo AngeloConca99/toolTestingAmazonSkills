@@ -1,0 +1,73 @@
+.options-container {
+  display: flex;
+  justify-content: flex-end;
+}
+.container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+}
+vscode-dropdown {
+  margin-bottom: 20px;
+  margin-right: 20px;
+}
+
+label {
+  margin-bottom: 4px;
+  margin-right: 10px;
+}
+.centered {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%; 
+}
+.centered div {
+  text-align: center;
+}
+.hidden {
+  display: none;
+}
+vscode-button {
+  margin-top: 20px;
+  margin-left: 20px;
+}
+.slider-container {
+  position: relative;
+  width: 150px;
+  margin: 10px;
+}
+
+input[type="range"] {
+  width: 100%;
+  height: 5px;
+  -webkit-appearance: none;
+  background-color: var(--vscode-editorWidget-background);
+  border: none;
+  border-radius: 5px;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 10px;
+  height: 10px;
+  background-color: var(--vscode-button-background);
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  top: -3px;
+}
+
+input[type="number"] {
+  width: 40px;
+  text-align: center;
+  color: var(--vscode-button-background);
+  background-color:var(--vscode-editorWidget-background);
+  border: 1px solid var(--vscode-button-background);
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
