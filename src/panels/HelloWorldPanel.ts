@@ -43,8 +43,7 @@ export class HelloWorldPanel {
     const displayHtmlContent = this.getDisplayHtmlContent(webview, extensionUri);
     const webviewUri = getUri(webview, extensionUri, ["out", "webview.js"]);
     const stylesUri = this.getCss(webview,extensionUri);
-    const nonce = getNonce();
-    console.log("trovato??");    
+    const nonce = getNonce();   
     return /*html*/ `
        <!DOCTYPE html>
        <html lang="en">
@@ -90,21 +89,31 @@ private getCss(webview: vscode.Webview, extensionUri: vscode.Uri): vscode.Uri {
 }
 
 private _setWebviewMessageListener(webview: vscode.Webview) {
-    webview.onDidReceiveMessage(
-      (message: any) => {
-        const command = message.command;
-        const text = message.text;
+  webview.onDidReceiveMessage(
+    async (message: any) => {
+      const command = message.command;
+      const text = message.text;
 
-        switch (command) {
-          case "start":
-            vscode.window.showInformationMessage(text);
-            return;
-        }
-      },
-      undefined,
-      this._disposables
-    );
-  }
-  
-
+      switch (command) {
+        case "start":
+          vscode.window.showInformationMessage(text);
+          return;
+        case "findFile":
+          vscode.window.showInformationMessage(text);
+          
+          try {
+            const JsonFile = await vscode.workspace.findFiles('**/skill-package/interactionModels/custom/*.json', '**/node_modules/**', 1);
+            vscode.window.showInformationMessage(JsonFile);
+            webview.postMessage({ command: 'JsonFile', files: JsonFile});
+          } catch (error) {
+            vscode.window.showErrorMessage('Errore durante la ricerca dei file nel workspace: ' + error);
+            
+          }
+          return;
+      }
+    },
+    undefined,
+    this._disposables
+  );
+}
 }
