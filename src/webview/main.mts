@@ -10,11 +10,8 @@ const vscode = acquireVsCodeApi();
 
 window.addEventListener('load', main);
 
-function main() {
-  vscode.postMessage({
-    command: "findFile",
-    text: "inizio caricamento"
-  });
+  function  main() {
+  const input = document.getElementById('fileInput') as InputFile;
   const slider = document.getElementById('slider')as Slider;
   const sliderValue = document.getElementById('sliderValue') as slidevalue;
   const startButton = document.getElementById('start') as Button;
@@ -22,8 +19,9 @@ function main() {
   dropdown?.addEventListener('input', handleDropdownChange);
   startButton?.addEventListener('click', handleStartClick);
   input?.addEventListener('change', handleFileSelect);
-
-}
+  WebviewMessageListener();
+  findFile();
+ }
 sliderValue.addEventListener('input', function() {
   let value = parseFloat(sliderValue.value);
   value = Math.min(100, Math.max(0, value));
@@ -61,14 +59,19 @@ function handleDropdownChange() {
 }
 
 function handleStartClick() {
+  vscode.postMessage({command:'findFile',text:"caricamento file"});
   vscode.postMessage({
     command: "start",
     text: "ciao"
   });
 }
-function handleFileSelect() {
+function progressRinghidden(){
   const progressRing=document.getElementById('progressRing');
+  const input = document.getElementById('fileInput');
   progressRing?.classList.add('hidden');
+  input?.classList.remove('hidden');
+}
+function handleFileSelect() {
   const textArea = document.getElementById('textContent');
   const input = document.getElementById('fileInput');
   input?.classList.add('hidden');
@@ -80,26 +83,38 @@ function handleFileSelect() {
       const text = event.target?.result as string; 
       textArea.value = text;
       progressRing?.classList.add('hidden');
-
       textArea.classList.remove('hidden');
   };
 
   reader.onerror = function(event) {
-      console.error("Errore durante il caricamento dei file:", reader.error);
+    vscode.postMessage({command: "start",text: "errore Caricamento file"});
   };
 
   reader.readAsText(file);
 }
-function WebviewMessageListener() {
-  webview.onDidReceiveMessage(
-    async (message: any) => {
-      const command = message.command;
-      const files = message.files;
+ function WebviewMessageListener() {
+  vscode.postMessage({ command: 'start',text:"caricato messageListnerwebui" });
+  window.addEventListener('message', event => {
+    const message = event.data;
+    const command = message.command;
+    const files = message.files;
        switch (command) {
         case "JsonFile":
+          vscode.postMessage({
+            command: "start",
+            text: "trovato"
+          });
           seedLoading(files);
-          return;
-      }
+          break;
+          case "JsonFileNotFound":
+            vscode.postMessage({
+              command: "start",
+              text: "non trovato"
+            });
+          progressRinghidden();
+          break;
+      
+        }
     },
     undefined,
     this._disposables
@@ -119,9 +134,10 @@ function seedLoading(file) {
       command: "start",
       text: "errore caricamento"
     });
-    handleFileSelect();
+    progressRinghidden();
   }
  }
-
-
+ function findFile(){
+  vscode.postMessage({command:'findFile',text:"caricamento file"});
+}
 

@@ -7,6 +7,7 @@ export class HelloWorldPanel {
   public static currentPanel: HelloWorldPanel | undefined;
   private readonly _panel: vscode.WebviewPanel;
   private _disposables: vscode.Disposable[] = [];
+  private readonly timeoutMillis: number = 20000; 
   private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
     this._panel = panel;
     this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
@@ -87,6 +88,21 @@ private getCss(webview: vscode.Webview, extensionUri: vscode.Uri): vscode.Uri {
         throw new Error('Errore durante il recupero del contenuto Css');
     }
 }
+private async findFilesWithTimeout(include: vscode.GlobPattern,exclude?: vscode.GlobPattern,maxResults?: number, timeoutMillis?: number): Thenable<vscode.Uri[]> {
+  const tokenSource = new vscode.CancellationTokenSource();
+  const timeout = timeoutMillis? setTimeout(() => tokenSource.cancel(), timeoutMillis) : undefined;
+
+  const filesPromise = vscode.workspace.findFiles(include, exclude, maxResults, tokenSource.token)
+      .then((files) => {
+          clearTimeout(timeout); 
+          return files;
+      });
+
+  return new Promise((resolve, reject) => {
+      filesPromise.then(resolve, reject);
+  });
+
+}
 
 private _setWebviewMessageListener(webview: vscode.Webview) {
   webview.onDidReceiveMessage(
@@ -102,16 +118,22 @@ private _setWebviewMessageListener(webview: vscode.Webview) {
           vscode.window.showInformationMessage(text);
           
           try {
-            const JsonFile = await vscode.workspace.findFiles('**/skill-package/interactionModels/custom/*.json', '**/node_modules/**', 1);
-            vscode.window.showInformationMessage(JsonFile);
-            webview.postMessage({ command: 'JsonFile', files: JsonFile});
+            const jsonFile = await this.findFilesWithTimeout('**/skill-package/interactionModels/custom/*.json','**/node_modules/**',1,this.timeoutMillis);
+            if (jsonFile && jsonFile.length > 0) {
+              vscode.window.showInformationMessage("File trovato: " + jsonFile[0].fsPath);
+              console.log("File trovato: " + jsonFile);
+              webview.postMessage({ command: 'JsonFile', files: jsonFile });
+          } else {
+            webview.postMessage({ command: 'JsonFileNotFound' });
+              vscode.window.showErrorMessage('Nessun file JSON trovato.');
+             
+          }
           } catch (error) {
-            vscode.window.showErrorMessage('Errore durante la ricerca dei file : ' + error);
-            
+            vscode.window.showErrorMessage('Errore durante la ricerca dei file: ' + error);
+            webview.postMessage({ command: 'JsonFileNotFound' });
           }
           return;
       }
-
     },
     undefined,
     this._disposables
