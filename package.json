@@ -12,11 +12,26 @@
   "main": "/out/extension.js",
   "contributes": {
     "viewsContainers": {
-      "panel": [
+      "viewsWelcome": [
         {
-          "id": "package-explorer",
-          "title": "Package Explorer",
-          "icon": "/out/vscode-alt-PRFM4MOK.svg"
+          "view": "skilltest",
+          "contents": "[TEST]Test your Alexa Skill"
+        }
+      ],
+      "activitybar": [
+        {
+          "id": "skilltest",
+          "title": "Alexa Skill Test",
+          "icon": "$(heart)"
+        }
+      ]
+    },
+    "views": {
+      "skilltest": [
+        {
+          "id": "toolkit-options",
+          "name": "Options",
+          "type": "webview"
         }
       ]
     },
