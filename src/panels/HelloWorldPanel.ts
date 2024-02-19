@@ -76,7 +76,7 @@ export class HelloWorldPanel {
       console.error(error);
       throw new Error('Errore durante il recupero del contenuto HTML');
     }
-  }
+  } 
   private getCss(webview: vscode.Webview, extensionUri: vscode.Uri): vscode.Uri {
     const fs = require('fs');
     const path = require('path');
@@ -117,31 +117,32 @@ export class HelloWorldPanel {
             return;
           case "findFile":
 
-            try {
-              const jsonFiles = await this.findFilesWithTimeout('**/skill-package/interactionModels/custom/*.json', '**/node_modules/**', 100, this.timeoutMillis);
-              let jsonArray = [];
-
-              for (const jsonFileUri of jsonFiles) {
+          try {
+            const jsonFiles = await this.findFilesWithTimeout('**/skill-package/interactionModels/custom/*.json', '**/node_modules/**', 100, this.timeoutMillis);
+            let jsonArray = []; 
+        
+            for (const jsonFileUri of jsonFiles) {
                 const jsonFileContent = await vscode.workspace.fs.readFile(jsonFileUri);
                 const jsonString = new TextDecoder().decode(jsonFileContent);
                 const fileJsonObject = JSON.parse(jsonString);
-
-              }
-              console.log(jsonArray);
-
-              if (jsonFiles && jsonFiles.length > 0) {
+        
+                jsonArray.push(fileJsonObject);
+            }
+            console.log(jsonArray);
+        
+            if (jsonFiles && jsonFiles.length > 0) {
                 webview.postMessage({ command: 'JsonFile', files: jsonArray });
-              } else {
+            } else {
                 webview.postMessage({ command: 'JsonFileNotFound' });
                 vscode.window.showErrorMessage('Nessun file JSON trovato.');
-              }
-            } catch (error) {
-              vscode.window.showErrorMessage('Errore durante la ricerca dei file: ' + error);
-              webview.postMessage({ command: 'JsonFileNotFound' });
             }
-
-
-
+        } catch (error) {
+            vscode.window.showErrorMessage('Errore durante la ricerca dei file: ' + error);
+            webview.postMessage({ command: 'JsonFileNotFound' });
+        }
+        
+        
+        
             return;
         }
       },
