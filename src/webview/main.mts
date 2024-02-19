@@ -20,7 +20,7 @@ window.addEventListener('load', main);
   startButton?.addEventListener('click', handleStartClick);
   input?.addEventListener('change', handleFileSelect);
   WebviewMessageListener();
-  findFile();
+ // findFile();
  }
 sliderValue.addEventListener('input', function() {
   let value = parseFloat(sliderValue.value);
@@ -123,7 +123,7 @@ function handleFileSelect() {
 function seedLoading(file) {
   const input = document.getElementById('fileInput');
   try{
-    const progressRing=document.getElementById('progressRing')
+    const progressRing=document.getElementById('progressRing');
     const textArea = document.getElementById('textContent');
     const jsonString = JSON.stringify(file, null, 2);
     textArea.value=jsonString;

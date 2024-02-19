@@ -124,7 +124,8 @@ private _setWebviewMessageListener(webview: vscode.Webview) {
               console.log("File trovato: " + jsonFile);
               webview.postMessage({ command: 'JsonFile', files: jsonFile });
           } else {
-            webview.postMessage({ command: 'JsonFileNotFound' });
+            
+              vscode.postMessage({ command: 'JsonFileNotFound' });
               vscode.window.showErrorMessage('Nessun file JSON trovato.');
              
           }

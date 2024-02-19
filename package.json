@@ -12,11 +12,26 @@
   "main": "/out/extension.js",
   "contributes": {
     "viewsContainers": {
-      "panel": [
+      "viewsWelcome": [
         {
-          "id": "package-explorer",
-          "title": "Package Explorer",
-          "icon": "/out/vscode-alt-PRFM4MOK.svg"
+          "view": "skilltest",
+          "contents": "[TEST]Test your Alexa Skill"
+        }
+      ],
+      "activitybar": [
+        {
+          "id": "skilltest",
+          "title": "Alexa Skill Test",
+          "icon": "$(heart)"
+        }
+      ]
+    },
+    "views": {
+      "skilltest": [
+        {
+          "id": "toolkit-options",
+          "name": "Options",
+          "type": "webview"
         }
       ]
     },
@@ -51,8 +66,6 @@
   },
   "dependencies": {
     "@types/html": "^1.0.4",
-    "@vscode/codicons": "^0.0.35",
-    "@vscode/webview-ui-toolkit": "^1.4.0",
-    "angular": "^1.8.3"
+    "@vscode/webview-ui-toolkit": "^1.4.0"
   }
 }

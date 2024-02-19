@@ -23,14 +23,6 @@ const webviewConfig = {
   entryPoints: ["./src/webview/main.mts"],
   outfile: "./out/webview.js"
 };
-const util = {
-  ...baseConfig,
-  target: "es2020",
-  format: "esm",
-  loader: {".svg": "file",},
-  entryPoints: ["./icons/vscode.svg", "./icons/vscode-alt.svg"],
-  outdir:"./out"
-};
 const html={
   ...baseConfig,
   target: "es2020",
@@ -52,9 +44,6 @@ const css={
 const buildExtension = async () => {
   await build(extensionConfig);};
 
-  const buildutil = async () => {
-    await build(util);};
-
 const buildWebview = async () => {
     await build(webviewConfig);
  };
@@ -70,7 +59,6 @@ const builcss = async () => {
 const buildAll = async () => {
        await buildExtension();
         await buildWebview();
-        await buildutil();
         await buildhtml();
         await builcss();
 };
