@@ -11,12 +11,12 @@ const vscode = acquireVsCodeApi();
 window.addEventListener('load', main);
 
 function main() {
+  let selection=1;
   const input = document.getElementById('fileInput') as InputFile;
   const slider = document.getElementById('slider') as Slider;
   const sliderValue = document.getElementById('sliderValue') as slidevalue;
   const startButton = document.getElementById('start') as Button;
   const dropdown = document.getElementById('dropdown') as Dropdown;
-  dropdown?.addEventListener('input', handleDropdownChange);
   startButton?.addEventListener('click', handleStartClick);
   input?.addEventListener('change', handleFileSelect);
 
@@ -53,35 +53,32 @@ slider.addEventListener('input', function () {
 });
 
 
-function handleDropdownChange() {
+function handleDropdownChange():number {
   const selectedOption = (document.getElementById('dropdown') as Dropdown).value;
-
+  let selection;
   switch (selectedOption) {
-    case 'option1':
-
-
-
-
-      break;
-    case 'option2':
-
-
-
-      break;
-    case 'option3':
-
-
-      break;
+    case 'option1':{
+       selection=1;}
+    break;
+    case 'option2':{
+      selection=2;
+    }break;
+    case 'option3':{
+      selection=3;
+    }
+    break;
     default:
-
-  }
+    selection=1;
+    }
+    return selection;
 }
 
 function handleStartClick() {
   vscode.postMessage({
     command: "start",
-    text: "ciao"
+    text: "prova ricerca"+handleDropdownChange()
   });
+  
 }
 function progressRinghidden() {
   const progressRing = document.getElementById('progressRing');
@@ -142,6 +139,14 @@ function seedLoading(files) {
         return;
       }
     });
+    if (allSamples.length === 0) {
+      vscode.postMessage({
+        command: "start",
+        text: "Nessun campione trovato negli intenti dei file JSON"
+      });
+      progressRinghidden();
+      return;
+    }
 
 
     const samplesText = allSamples.join('\n');
@@ -153,13 +158,7 @@ function seedLoading(files) {
     textArea?.classList.remove('hidden');
 
 
-    if (allSamples.length === 0) {
-      vscode.postMessage({
-        command: "start",
-        text: "Nessun campione trovato negli intenti dei file JSON"
-      });
-      progressRinghidden();
-    }
+    
   } catch (error) {
     vscode.postMessage({
       command: "start",
@@ -168,9 +167,6 @@ function seedLoading(files) {
     progressRinghidden();
   }
 }
-
-
-
 
 function findFile() {
   vscode.postMessage({ command: 'findFile' });
