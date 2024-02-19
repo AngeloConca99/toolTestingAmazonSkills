@@ -113,23 +113,65 @@ function handleFileSelect() {
 function WebviewMessageListener() {
 
 }
-function seedLoading(file) {
+function seedLoading(files) {
   const input = document.getElementById('fileInput');
   try {
     const progressRing = document.getElementById('progressRing');
     const textArea = document.getElementById('textContent');
-    const jsonString = JSON.stringify(file, null, 2);
-    textArea.value = jsonString;
+    const allSamples = [];
+
+
+    files.forEach(file => {
+
+      if (file && file.interactionModel && file.interactionModel.languageModel && file.interactionModel.languageModel.intents) {
+
+        file.interactionModel.languageModel.intents.forEach(intent => {
+
+          if (Array.isArray(intent.samples) && intent.samples.length > 0) {
+
+            allSamples.push(...intent.samples);
+          }
+        });
+      } else {
+
+        vscode.postMessage({
+          command: "start",
+          text: "Struttura del file JSON non valida o mancante"
+        });
+        progressRinghidden();
+        return;
+      }
+    });
+
+
+    const samplesText = allSamples.join('\n');
+
+    textArea.value = samplesText;
+
+
     progressRing?.classList.add('hidden');
     textArea?.classList.remove('hidden');
+
+
+    if (allSamples.length === 0) {
+      vscode.postMessage({
+        command: "start",
+        text: "Nessun campione trovato negli intenti dei file JSON"
+      });
+      progressRinghidden();
+    }
   } catch (error) {
     vscode.postMessage({
       command: "start",
-      text: "errore caricamento"
+      text: "Errore durante il caricamento " + error
     });
     progressRinghidden();
   }
 }
+
+
+
+
 function findFile() {
   vscode.postMessage({ command: 'findFile' });
 }
