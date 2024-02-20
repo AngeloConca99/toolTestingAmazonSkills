@@ -76,7 +76,7 @@ export class HelloWorldPanel {
       console.error(error);
       throw new Error('Errore durante il recupero del contenuto HTML');
     }
-  } 
+  }
   private getCss(webview: vscode.Webview, extensionUri: vscode.Uri): vscode.Uri {
     const fs = require('fs');
     const path = require('path');
@@ -104,8 +104,40 @@ export class HelloWorldPanel {
     });
 
   }
+  private postseed(webview: vscode.Webview) {
+    try {
+      const jsonFiles = await this.findFilesWithTimeout('**/skill-package/interactionModels/custom/*.json', '**/node_modules/**', 100, this.timeoutMillis);
+      let allSamples = [];
 
-  private _setWebviewMessageListener(webview: vscode.Webview) {
+      for (const jsonFileUri of jsonFiles) {
+        const jsonFileContent = await vscode.workspace.fs.readFile(jsonFileUri);
+        const jsonString = new TextDecoder().decode(jsonFileContent);
+        const fileJsonObject = JSON.parse(jsonString);
+
+        if (fileJsonObject && fileJsonObject.interactionModel && fileJsonObject.interactionModel.languageModel && fileJsonObject.interactionModel.languageModel.intents) {
+          fileJsonObject.interactionModel.languageModel.intents.forEach(intent => {
+            if (Array.isArray(intent.samples) && intent.samples.length > 0) {
+              allSamples.push(...intent.samples);
+            }
+          });
+        } else {
+          throw new Error("Struttura del file JSON non valida o mancante");
+        }
+      }
+
+      if (allSamples.length === 0) {
+        vscode.window.showErrorMessage('Nessuna "seed" trovata negli intenti dei file JSON.');
+      } else {
+        webview.postMessage({ command: 'JsonFile', samples: allSamples });
+      }
+    } catch (error) {
+      vscode.window.showErrorMessage('Errore durante la ricerca dei file: ' + error);
+      webview.postMessage({ command: 'JsonFileNotFound' });
+    }
+
+  }
+
+  private async _setWebviewMessageListener(webview: vscode.Webview) {
     webview.onDidReceiveMessage(
       async (message: any) => {
         const command = message.command;
@@ -114,36 +146,10 @@ export class HelloWorldPanel {
         switch (command) {
           case "start":
             vscode.window.showInformationMessage(text);
-            return;
+            break;
           case "findFile":
-
-          try {
-            const jsonFiles = await this.findFilesWithTimeout('**/skill-package/interactionModels/custom/*.json', '**/node_modules/**', 100, this.timeoutMillis);
-            let jsonArray = []; 
-        
-            for (const jsonFileUri of jsonFiles) {
-                const jsonFileContent = await vscode.workspace.fs.readFile(jsonFileUri);
-                const jsonString = new TextDecoder().decode(jsonFileContent);
-                const fileJsonObject = JSON.parse(jsonString);
-        
-                jsonArray.push(fileJsonObject);
-            }
-            console.log(jsonArray);
-        
-            if (jsonFiles && jsonFiles.length > 0) {
-                webview.postMessage({ command: 'JsonFile', files: jsonArray });
-            } else {
-                webview.postMessage({ command: 'JsonFileNotFound' });
-                vscode.window.showErrorMessage('Nessun file JSON trovato.');
-            }
-        } catch (error) {
-            vscode.window.showErrorMessage('Errore durante la ricerca dei file: ' + error);
-            webview.postMessage({ command: 'JsonFileNotFound' });
-        }
-        
-        
-        
-            return;
+            this.postseed(webview);
+            break;
         }
       },
       undefined,
