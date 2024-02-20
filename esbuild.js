@@ -23,14 +23,6 @@ const webviewConfig = {
   entryPoints: ["./src/webview/main.mts"],
   outfile: "./out/webview.js"
 };
-const html={
-  ...baseConfig,
-  target: "es2020",
-  format: "esm",
-  loader: {".html": "file",},
-  entryPoints: ["./src/component/display.html"],
-  outdir:"./out"
-};
 const css={
   ...baseConfig,
   target: "es2020",
@@ -47,9 +39,6 @@ const buildExtension = async () => {
 const buildWebview = async () => {
     await build(webviewConfig);
  };
- const buildhtml = async () => {
-  await build(html);
-};
 const builcss = async () => {
   await build(css);
 };
@@ -59,7 +48,6 @@ const builcss = async () => {
 const buildAll = async () => {
        await buildExtension();
         await buildWebview();
-        await buildhtml();
         await builcss();
 };
 

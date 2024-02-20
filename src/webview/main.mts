@@ -11,7 +11,7 @@ const vscode = acquireVsCodeApi();
 window.addEventListener('load', main);
 window.addEventListener('load', eventlistern);
 
-function main() {
+async function main() {
   let selection = 1;
   const input = document.getElementById('fileInput') as InputFile;
   const slider = document.getElementById('slider') as Slider;
@@ -105,6 +105,7 @@ function handleFileSelect() {
         throw new Error("Nessuna 'seed' trovata negli intenti del file JSON");
       }
       setSamplesAndHideProgress(allSamples, textArea, progressRing);
+
     } catch (error) {
       vscode.postMessage({
         command: "start",
@@ -116,14 +117,13 @@ function handleFileSelect() {
 
   reader.readAsText(file);
 }
-function seedLoading(files) {
+function seedLoading(samples) {
   const input = document.getElementById('fileInput');
   try {
     const progressRing = document.getElementById('progressRing');
     const textArea = document.getElementById('textContent');
-    const allSamples = files;
-    setSamplesAndHideProgress(allSamples, textArea, progressRing);
-    } catch (error) {
+    setSamplesAndHideProgress(samples, textArea, progressRing);
+  } catch (error) {
     vscode.postMessage({
       command: "start",
       text: "Errore durante il caricamento " + error.message
@@ -133,14 +133,14 @@ function seedLoading(files) {
 }
 
 
-function eventlistern() {
+async function eventlistern() {
   window.addEventListener('message', event => {
     const message = event.data;
     const command = message.command;
-    const files = message.files;
+    const samples = message.samples;
     switch (command) {
       case "JsonFile": {
-        seedLoading(files);
+        seedLoading(samples);
       }
         break;
       case "JsonFileNotFound": {

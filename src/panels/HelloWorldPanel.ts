@@ -3,6 +3,7 @@
 import * as vscode from "vscode";
 import { getUri } from "../utilities/getUri";
 import { getNonce } from "../utilities/getNonce";
+import { lstat } from "fs";
 export class HelloWorldPanel {
   public static currentPanel: HelloWorldPanel | undefined;
   private readonly _panel: vscode.WebviewPanel;
@@ -22,7 +23,7 @@ export class HelloWorldPanel {
         // Enable javascript in the webview
         enableScripts: true,
         // Restrict the webview to only load resources from the `out` directory
-        localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'out')]
+       // localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'out')]
       });
 
       HelloWorldPanel.currentPanel = new HelloWorldPanel(panel, extensionUri);
@@ -45,7 +46,6 @@ export class HelloWorldPanel {
     const webviewUri = getUri(webview, extensionUri, ["out", "webview.js"]);
     const stylesUri = this.getCss(webview, extensionUri);
     const nonce = getNonce();
-    console.log("prova");
     return /*html*/ `
        <!DOCTYPE html>
        <html lang="en">
@@ -68,12 +68,11 @@ export class HelloWorldPanel {
     const fs = require('fs');
     const path = require('path');
     try {
-      const displayDefault = require("../../out/display.js").default;
-      const htmlPath = path.join(extensionUri.fsPath, "out", displayDefault);
+     const htmlPath = path.join(extensionUri.fsPath, "src", "component", "display.html");
+      console.log(htmlPath);
       const displayHtmlContent = fs.readFileSync(htmlPath, 'utf-8');
       return displayHtmlContent;
     } catch (error) {
-      console.error(error);
       throw new Error('Errore durante il recupero del contenuto HTML');
     }
   }
@@ -85,7 +84,6 @@ export class HelloWorldPanel {
       const cssUri = getUri(webview, extensionUri, ["out", cssDefault]);
       return cssUri;
     } catch (error) {
-      console.error(error);
       throw new Error('Errore durante il recupero del contenuto Css');
     }
   }
@@ -104,7 +102,7 @@ export class HelloWorldPanel {
     });
 
   }
-  private postseed(webview: vscode.Webview) {
+  private async postseed(webview: vscode.Webview) {
     try {
       const jsonFiles = await this.findFilesWithTimeout('**/skill-package/interactionModels/custom/*.json', '**/node_modules/**', 100, this.timeoutMillis);
       let allSamples = [];
@@ -126,7 +124,7 @@ export class HelloWorldPanel {
       }
 
       if (allSamples.length === 0) {
-        vscode.window.showErrorMessage('Nessuna "seed" trovata negli intenti dei file JSON.');
+        throw new Error('Nessuna "seed" trovata negli intenti dei file JSON.');
       } else {
         webview.postMessage({ command: 'JsonFile', samples: allSamples });
       }
