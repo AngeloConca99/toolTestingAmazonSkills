@@ -9,7 +9,7 @@ provideVSCodeDesignSystem().register(vsCodeButton(), vsCodeDropdown(), vsCodeOpt
 const vscode = acquireVsCodeApi();
 
 window.addEventListener('load', main);
-window.addEventListener('load', eventlistern);
+window.addEventListener('load', eventListern);
 
 async function main() {
   let selection = 1;
@@ -25,7 +25,7 @@ async function main() {
 
 function handleStartClick() {
   vscode.postMessage({
-    command: "start",
+    command: 'message',
     text: "prova ricerca" + handleDropdownChange()
   });
 
@@ -42,10 +42,13 @@ function findFile() {
   vscode.postMessage({ command: 'findFile' });
 }
 function setSamplesAndHideProgress(allSamples, textArea, progressRing) {
+  const startButton = document.getElementById('start');
   const samplesText = allSamples.join('\n');
   textArea.value = samplesText;
   progressRing.classList.add('hidden');
   textArea.classList.remove('hidden');
+  startButton?.removeAttribute('disabled');
+  
 }
 
 function handleDropdownChange(): number {
@@ -74,12 +77,12 @@ function handleFileSelect() {
   const progressRing = document.getElementById('progressRing');
 
   if (!input.files || input.files.length === 0) {
-    throw new Error("Nessun file Selezionato");
+    throw new Error("No file selected");
   }
 
   const file = input.files[0];
   if (!file || !file.name.endsWith('.json')) {
-    throw new Error("seleziona un file json valido");
+    throw new Error("Json file not selected");
   }
 
   input.classList.add('hidden');
@@ -92,7 +95,7 @@ function handleFileSelect() {
       const allSamples = [];
 
       if (!json || !json.interactionModel || !json.interactionModel.languageModel || !json.interactionModel.languageModel.intents) {
-        throw new Error("Struttura del file JSON non valida");
+        throw new Error("Invalid JSON file structure");
       }
 
       json.interactionModel.languageModel.intents.forEach(intent => {
@@ -102,14 +105,14 @@ function handleFileSelect() {
       });
 
       if (allSamples.length === 0) {
-        throw new Error("Nessuna 'seed' trovata negli intenti del file JSON");
+        throw new Error("No seed found in JSON file");
       }
       setSamplesAndHideProgress(allSamples, textArea, progressRing);
 
     } catch (error) {
       vscode.postMessage({
-        command: "start",
-        text: "Errore durante il caricamento del file JSON: " + error.message
+        command: 'errorMessage',
+        text: "error while loading " + error.message
       });
       progressRinghidden();
     }
@@ -125,25 +128,25 @@ function seedLoading(samples) {
     setSamplesAndHideProgress(samples, textArea, progressRing);
   } catch (error) {
     vscode.postMessage({
-      command: "start",
-      text: "Errore durante il caricamento " + error.message
+      command: 'errorMessage',
+      text: "error while loading " + error.message
     });
     progressRinghidden();
   }
 }
 
 
-async function eventlistern() {
+async function eventListern() {
   window.addEventListener('message', event => {
     const message = event.data;
     const command = message.command;
     const samples = message.samples;
     switch (command) {
-      case "JsonFile": {
+      case 'JsonFile': {
         seedLoading(samples);
       }
         break;
-      case "JsonFileNotFound": {
+      case 'JsonFileNotFound': {
         progressRinghidden();
       }
         break;

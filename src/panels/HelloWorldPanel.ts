@@ -68,8 +68,7 @@ export class HelloWorldPanel {
     const fs = require('fs');
     const path = require('path');
     try {
-     const htmlPath = path.join(extensionUri.fsPath, "src", "component", "display.html");
-      console.log(htmlPath);
+      const htmlPath = path.join(extensionUri.fsPath, "src", "component", "display.html");
       const displayHtmlContent = fs.readFileSync(htmlPath, 'utf-8');
       return displayHtmlContent;
     } catch (error) {
@@ -119,17 +118,17 @@ export class HelloWorldPanel {
             }
           });
         } else {
-          throw new Error("Struttura del file JSON non valida o mancante");
+          throw new Error("Invalid or missing JSON file structure");
         }
       }
 
       if (allSamples.length === 0) {
-        throw new Error('Nessuna "seed" trovata negli intenti dei file JSON.');
+        throw new Error("No seeds found in JSON file intents.");
       } else {
         webview.postMessage({ command: 'JsonFile', samples: allSamples });
       }
     } catch (error) {
-      vscode.window.showErrorMessage('Errore durante la ricerca dei file: ' + error);
+      vscode.window.showErrorMessage("error loading file: "+ error);
       webview.postMessage({ command: 'JsonFileNotFound' });
     }
 
@@ -142,11 +141,14 @@ export class HelloWorldPanel {
         const text = message.text;
 
         switch (command) {
-          case "start":
+          case "message":
             vscode.window.showInformationMessage(text);
             break;
           case "findFile":
             this.postseed(webview);
+            break;
+          case "errorMessage":
+            vscode.window.showErrorMessage(text);
             break;
         }
       },
