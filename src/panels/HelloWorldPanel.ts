@@ -5,17 +5,21 @@ import { getUri } from "../utilities/getUri";
 import { getNonce } from "../utilities/getNonce";
 import { lstat } from "fs";
 import * as path from 'path';
+
 export class HelloWorldPanel {
+
   public static currentPanel: HelloWorldPanel | undefined;
   private readonly _panel: vscode.WebviewPanel;
   private _disposables: vscode.Disposable[] = [];
   private readonly timeoutMillis: number = 20000;
+
   private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
     this._panel = panel;
     this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
     this._panel.webview.html = this._getWebviewContent(this._panel.webview, extensionUri);
     this._setWebviewMessageListener(this._panel.webview);
   }
+
   public static render(extensionUri: vscode.Uri) {
     if (HelloWorldPanel.currentPanel) {
       HelloWorldPanel.currentPanel._panel.reveal(vscode.ViewColumn.Two);
@@ -30,6 +34,7 @@ export class HelloWorldPanel {
       HelloWorldPanel.currentPanel = new HelloWorldPanel(panel, extensionUri);
     }
   }
+
   public dispose() {
     HelloWorldPanel.currentPanel = undefined;
 
@@ -42,6 +47,7 @@ export class HelloWorldPanel {
       }
     }
   }
+
   private _getWebviewContent(webview: vscode.Webview, extensionUri: vscode.Uri) {
     const displayHtmlContent = this.getDisplayHtmlContent(webview, extensionUri);
     const webviewUri = getUri(webview, extensionUri, ["out", "webview.js"]);
@@ -76,6 +82,7 @@ export class HelloWorldPanel {
       throw new Error('Errore durante il recupero del contenuto HTML');
     }
   }
+
   private getCss(webview: vscode.Webview, extensionUri: vscode.Uri): vscode.Uri {
     const fs = require('fs');
     const path = require('path');
@@ -87,6 +94,7 @@ export class HelloWorldPanel {
       throw new Error('Errore durante il recupero del contenuto Css');
     }
   }
+
   private async CreateTxtFile(text: string) {
     try {
       const workspaceFolders = vscode.workspace.workspaceFolders;
@@ -130,6 +138,7 @@ export class HelloWorldPanel {
     });
 
   }
+  
   private async postseed(webview: vscode.Webview) {
     try {
       const jsonFiles = await this.findFilesWithTimeout('**/skill-package/interactionModels/custom/*.json', '**/node_modules/**', 100, this.timeoutMillis);

@@ -167,7 +167,7 @@ async function eventListern() {
 
 sliderValue.addEventListener('input', function () {
   let value = parseFloat(sliderValue.value);
-  value = Math.min(100, Math.max(0, value));
+  value = Math.min(10, Math.max(0, value));
   sliderValue.value = value;
   slider.value = value.toString();
 });
