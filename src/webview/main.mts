@@ -24,10 +24,15 @@ async function main() {
 }
 
 function handleStartClick() {
+  const textArea = document.getElementById('textContent');
   vscode.postMessage({
     command: 'message',
     text: "prova ricerca" + handleDropdownChange()
   });
+  vscode.postMessage({
+    command:'createTxtFile',
+    text: textArea.value
+   });
 
 }
 function progressRinghidden() {
@@ -41,6 +46,7 @@ function progressRinghidden() {
 function findFile() {
   vscode.postMessage({ command: 'findFile' });
 }
+
 function setSamplesAndHideProgress(allSamples, textArea, progressRing) {
   const startButton = document.getElementById('start');
   const samplesText = allSamples.join('\n');
@@ -48,8 +54,7 @@ function setSamplesAndHideProgress(allSamples, textArea, progressRing) {
   progressRing.classList.add('hidden');
   textArea.classList.remove('hidden');
   startButton?.removeAttribute('disabled');
-  
-}
+  }
 
 function handleDropdownChange(): number {
   const selectedOption = (document.getElementById('dropdown') as Dropdown).value;
@@ -71,6 +76,7 @@ function handleDropdownChange(): number {
   }
   return selection;
 }
+
 function handleFileSelect() {
   const textArea = document.getElementById('textContent');
   const input = document.getElementById('fileInput');

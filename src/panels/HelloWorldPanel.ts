@@ -4,6 +4,7 @@ import * as vscode from "vscode";
 import { getUri } from "../utilities/getUri";
 import { getNonce } from "../utilities/getNonce";
 import { lstat } from "fs";
+import * as path from 'path';
 export class HelloWorldPanel {
   public static currentPanel: HelloWorldPanel | undefined;
   private readonly _panel: vscode.WebviewPanel;
@@ -86,6 +87,34 @@ export class HelloWorldPanel {
       throw new Error('Errore durante il recupero del contenuto Css');
     }
   }
+  private async CreateTxtFile(text: string) {
+    try {
+      const workspaceFolders = vscode.workspace.workspaceFolders;
+      if (!workspaceFolders || workspaceFolders.length === 0) {
+        vscode.window.showErrorMessage('Nessuna cartella di lavoro trovata.');
+        return;
+      }
+      
+      const workspaceFolder = workspaceFolders[0]; // Prendi solo la prima cartella di lavoro
+      const folderPath = path.join(workspaceFolder.uri.fsPath, 'tmp');
+      const fileName = 'tmp-seed.txt';
+      await this.saveFileInFolder(text, folderPath, fileName);
+    } catch (error) {
+      vscode.window.showErrorMessage('Errore durante la creazione del file: ' + error);
+    }
+  }
+  
+  private async saveFileInFolder(content: string, folderPath: string, fileName: string) {
+    const fullPath = vscode.Uri.file(path.join(folderPath, fileName));
+    const contentBuffer = Buffer.from(content, 'utf8');
+    try {
+      await vscode.workspace.fs.writeFile(fullPath, contentBuffer);
+      vscode.window.showInformationMessage('File salvato con successo.');
+    } catch (error) {
+      vscode.window.showErrorMessage('Si è verificato un errore durante il salvataggio del file: ' + error);
+    }
+  }
+
   private async findFilesWithTimeout(include: vscode.GlobPattern, exclude?: vscode.GlobPattern, maxResults?: number, timeoutMillis?: number): Thenable<vscode.Uri[]> {
     const tokenSource = new vscode.CancellationTokenSource();
     const timeout = timeoutMillis ? setTimeout(() => tokenSource.cancel(), timeoutMillis) : undefined;
@@ -133,7 +162,6 @@ export class HelloWorldPanel {
     }
 
   }
-
   private async _setWebviewMessageListener(webview: vscode.Webview) {
     webview.onDidReceiveMessage(
       async (message: any) => {
@@ -150,6 +178,9 @@ export class HelloWorldPanel {
           case "errorMessage":
             vscode.window.showErrorMessage(text);
             break;
+          case "createTxtFile":
+          this.CreateTxtFile(text);
+           break;
         }
       },
       undefined,
