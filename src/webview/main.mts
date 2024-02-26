@@ -27,7 +27,7 @@ function handleStartClick() {
   const textArea = document.getElementById('textContent');
   vscode.postMessage({
     command: 'message',
-    text: "prova ricerca" + handleDropdownChange()
+    text: "prova ricerca" 
   });
   vscode.postMessage({
     command:'createTxtFile',
@@ -55,26 +55,31 @@ function setSamplesAndHideProgress(allSamples, textArea, progressRing) {
   textArea.classList.remove('hidden');
   startButton?.removeAttribute('disabled');
   }
+  function postimplementatio(implementation:string){
+    vscode.postMessage({
+      command: implementation, 
+    });
+  }
 
-function handleDropdownChange(): number {
+function  chosenimplementation(){
   const selectedOption = (document.getElementById('dropdown') as Dropdown).value;
   let selection;
   switch (selectedOption) {
     case 'option1': {
-      selection = 1;
+      
+      
     }
       break;
     case 'option2': {
-      selection = 2;
+      
     } break;
     case 'option3': {
-      selection = 3;
+      postimplementatio('ChatGpt');
     }
       break;
     default:
-      selection = 1;
+      postimplementatio('ChatGpt');
   }
-  return selection;
 }
 
 function handleFileSelect() {
@@ -141,7 +146,6 @@ function seedLoading(samples) {
   }
 }
 
-
 async function eventListern() {
   window.addEventListener('message', event => {
     const message = event.data;
@@ -156,11 +160,14 @@ async function eventListern() {
         progressRinghidden();
       }
         break;
+      case 'SavedFile':{
+        chosenimplementation();
+
+      }
+
 
     }
   },
-    undefined,
-    this._disposables
   );
 }
 

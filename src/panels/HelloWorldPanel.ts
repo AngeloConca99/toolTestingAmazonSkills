@@ -5,6 +5,7 @@ import { getUri } from "../utilities/getUri";
 import { getNonce } from "../utilities/getNonce";
 import { lstat } from "fs";
 import * as path from 'path';
+import * as child_process from 'child_process';
 
 export class HelloWorldPanel {
 
@@ -95,7 +96,7 @@ export class HelloWorldPanel {
     }
   }
 
-  private async CreateTxtFile(text: string) {
+  private async CreateTxtFile(text: string,webview: vscode.Webview) {
     try {
       const workspaceFolders = vscode.workspace.workspaceFolders;
       if (!workspaceFolders || workspaceFolders.length === 0) {
@@ -103,25 +104,63 @@ export class HelloWorldPanel {
         return;
       }
       
-      const workspaceFolder = workspaceFolders[0]; // Prendi solo la prima cartella di lavoro
+      const workspaceFolder = workspaceFolders[0]; 
       const folderPath = path.join(workspaceFolder.uri.fsPath, 'tmp');
-      const fileName = 'tmp-seed.txt';
-      await this.saveFileInFolder(text, folderPath, fileName);
+      const fileName = 'seed-file.txt';
+      await this.saveFileInFolder(text, folderPath, fileName, webview);
     } catch (error) {
       vscode.window.showErrorMessage('Errore durante la creazione del file: ' + error);
     }
   }
   
-  private async saveFileInFolder(content: string, folderPath: string, fileName: string) {
+  private async saveFileInFolder(content: string, folderPath: string, fileName: string, webview: vscode.Webview) {
     const fullPath = vscode.Uri.file(path.join(folderPath, fileName));
     const contentBuffer = Buffer.from(content, 'utf8');
     try {
       await vscode.workspace.fs.writeFile(fullPath, contentBuffer);
       vscode.window.showInformationMessage('File salvato con successo.');
+      webview.postMessage({ command: 'SavedFile' });
+
     } catch (error) {
       vscode.window.showErrorMessage('Si è verificato un errore durante il salvataggio del file: ' + error);
     }
   }
+
+
+  private async runChatGptScript(scriptPath: string) {
+    try {
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        if (!workspaceFolders || workspaceFolders.length === 0) {
+            vscode.window.showErrorMessage('Nessuna cartella di lavoro trovata.');
+            return;
+        }
+
+        const workspaceFolder = workspaceFolders[0];
+        const workspaceTmpPath = path.join(workspaceFolder.uri.fsPath, 'tmp');
+        const outputPath = path.join(workspaceTmpPath, 'output.txt');
+
+        // Esegui il comando per eseguire lo script Python con il percorso della cartella "tmp" come argomento
+        const command = `python ${scriptPath} ${workspaceTmpPath} > ${outputPath}`;
+        child_process.exec(command, (error, stdout, stderr) => {
+            if (error) {
+                vscode.window.showErrorMessage(`Errore durante l'esecuzione dello script Python: ${error.message}`);
+                return;
+            }
+            if (stderr) {
+                vscode.window.showErrorMessage(`Errore durante l'esecuzione dello script Python: ${stderr}`);
+                return;
+            }
+            vscode.window.showInformationMessage(`Lo script Python è stato eseguito correttamente. Output salvato in: ${outputPath}`);
+        });
+    } catch (error) {
+        vscode.window.showErrorMessage(`Errore durante l'esecuzione dello script Python: ${error}`);
+    }
+}
+
+
+
+
+
 
   private async findFilesWithTimeout(include: vscode.GlobPattern, exclude?: vscode.GlobPattern, maxResults?: number, timeoutMillis?: number): Thenable<vscode.Uri[]> {
     const tokenSource = new vscode.CancellationTokenSource();
@@ -178,18 +217,20 @@ export class HelloWorldPanel {
         const text = message.text;
 
         switch (command) {
-          case "message":
+          case 'message':
             vscode.window.showInformationMessage(text);
             break;
-          case "findFile":
+          case 'findFile':
             this.postseed(webview);
             break;
-          case "errorMessage":
+          case 'errorMessage':
             vscode.window.showErrorMessage(text);
             break;
-          case "createTxtFile":
-          this.CreateTxtFile(text);
+          case 'createTxtFile':
+          this.CreateTxtFile(text,webview);
            break;
+           case'ChatGpt':
+           this.runChatGptScript('../../out/implementations/chatGPT-prompt.py');
         }
       },
       undefined,

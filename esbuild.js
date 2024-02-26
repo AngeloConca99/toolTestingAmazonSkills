@@ -1,4 +1,18 @@
 const { build } = require("esbuild");
+const fs = require('fs-extra');
+
+const sourceDir = './implementations';
+const targetDir = './out/implementations';
+
+fs.copy(sourceDir, targetDir, err => {
+  if (err) {
+    console.error('Errore durante la copia:', err);
+    return;
+  }
+  console.log('Copia completata con successo.');
+});
+
+
 
 const baseConfig = {
   bundle: true,
@@ -42,6 +56,7 @@ const buildWebview = async () => {
 const builcss = async () => {
   await build(css);
 };
+
 
 
 
