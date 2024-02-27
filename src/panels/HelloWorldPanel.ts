@@ -30,7 +30,7 @@ export class HelloWorldPanel {
         // Enable javascript in the webview
         enableScripts: true,
         // Restrict the webview to only load resources from the `out` directory
-       // localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'out')]
+        // localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'out')]
       });
 
       HelloWorldPanel.currentPanel = new HelloWorldPanel(panel, extensionUri);
@@ -97,15 +97,15 @@ export class HelloWorldPanel {
     }
   }
 
-  private async CreateTxtFile(text: string,webview: vscode.Webview) {
+  private async CreateTxtFile(text: string, webview: vscode.Webview) {
     try {
       const workspaceFolders = vscode.workspace.workspaceFolders;
       if (!workspaceFolders || workspaceFolders.length === 0) {
         vscode.window.showErrorMessage('Nessuna cartella di lavoro trovata.');
         return;
       }
-      
-      const workspaceFolder = workspaceFolders[0]; 
+
+      const workspaceFolder = workspaceFolders[0];
       this.workspaceTmpPath = path.join(workspaceFolder.uri.fsPath, 'tmp');
       const folderPath = this.workspaceTmpPath;
       const fileName = 'seed-file.txt';
@@ -114,7 +114,7 @@ export class HelloWorldPanel {
       vscode.window.showErrorMessage('Errore durante la creazione del file: ' + error);
     }
   }
-  
+
   private async saveFileInFolder(content: string, folderPath: string, fileName: string, webview: vscode.Webview) {
     const fullPath = vscode.Uri.file(path.join(folderPath, fileName));
     const contentBuffer = Buffer.from(content, 'utf8');
@@ -130,33 +130,33 @@ export class HelloWorldPanel {
 
   private async runChatGptScript(scriptPath: string) {
     try {
-        if (!this.workspaceTmpPath) {
-            vscode.window.showErrorMessage('La cartella temporanea non è stata trovata.');
-            return;
+      if (!this.workspaceTmpPath) {
+        vscode.window.showErrorMessage('La cartella temporanea non è stata trovata.');
+        return;
+      }
+
+      this.outputPath = path.join(this.workspaceTmpPath, 'output.txt');
+
+      const extensionPath = __dirname;
+      const absoluteScriptPath = path.join(extensionPath, scriptPath);
+
+      const command = `python ${absoluteScriptPath} ${this.workspaceTmpPath} > ${this.outputPath}`;
+
+      child_process.exec(command, (error, stdout, stderr) => {
+        if (error) {
+          vscode.window.showErrorMessage(`Errore durante l'esecuzione dello script Python: ${error.message}`);
+          return;
         }
-
-        this.outputPath = path.join(this.workspaceTmpPath, 'output.txt');
-
-        const extensionPath = __dirname; 
-        const absoluteScriptPath = path.join(extensionPath, scriptPath); 
-        
-        const command = `python ${absoluteScriptPath} ${this.workspaceTmpPath} > ${this.outputPath}`;
-        
-        child_process.exec(command, (error, stdout, stderr) => {
-            if (error) {
-                vscode.window.showErrorMessage(`Errore durante l'esecuzione dello script Python: ${error.message}`);
-                return;
-            }
-            if (stderr) {
-                vscode.window.showErrorMessage(`Errore durante l'esecuzione dello script Python: ${stderr}`);
-                return;
-            }
-            vscode.window.showInformationMessage(`Lo script Python è stato eseguito correttamente. Output salvato in: ${this.outputPath}`);
-        });
+        if (stderr) {
+          vscode.window.showErrorMessage(`Errore durante l'esecuzione dello script Python: ${stderr}`);
+          return;
+        }
+        vscode.window.showInformationMessage(`Lo script Python è stato eseguito correttamente. Output salvato in: ${this.outputPath}`);
+      });
     } catch (error) {
-        vscode.window.showErrorMessage(`Errore durante l'esecuzione dello script Python: ${error}`);
+      vscode.window.showErrorMessage(`Errore durante l'esecuzione dello script Python: ${error}`);
     }
-}
+  }
 
 
 
@@ -176,7 +176,7 @@ export class HelloWorldPanel {
     });
 
   }
-  
+
   private async postseed(webview: vscode.Webview) {
     try {
       const jsonFiles = await this.findFilesWithTimeout('**/skill-package/interactionModels/custom/*.json', '**/node_modules/**', 100, this.timeoutMillis);
@@ -204,7 +204,7 @@ export class HelloWorldPanel {
         webview.postMessage({ command: 'JsonFile', samples: allSamples });
       }
     } catch (error) {
-      vscode.window.showErrorMessage("error loading file: "+ error);
+      vscode.window.showErrorMessage("error loading file: " + error);
       webview.postMessage({ command: 'JsonFileNotFound' });
     }
 
@@ -226,10 +226,10 @@ export class HelloWorldPanel {
             vscode.window.showErrorMessage(text);
             break;
           case 'createTxtFile':
-          this.CreateTxtFile(text,webview);
-           break;
-           case'ChatGpt':
-           this.runChatGptScript('/implementations/chatGPT-prompt.py');
+            this.CreateTxtFile(text, webview);
+            break;
+          case 'ChatGpt':
+            this.runChatGptScript('/implementations/chatGPT-prompt.py');
         }
       },
       undefined,
