@@ -3,6 +3,8 @@
   "displayName": "Alexa-Skill-Test-Robustness",
   "version": "0.0.1",
   "description": "Descrizione dell'estensione",
+  "publisher": "il_tuo_nome_pubblicatore",
+  "id": "il_tuo_nome_pubblicatore.alexa-skill-test-robustness",
   "engines": {
     "vscode": "^1.85.0"
   },
