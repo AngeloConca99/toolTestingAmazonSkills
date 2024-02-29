@@ -1,11 +1,11 @@
 import {
   provideVSCodeDesignSystem, vsCodeButton, Button,
-  vsCodeDropdown, vsCodeOption, Dropdown, vsCodeProgressRing, vsCodeTextArea, ProgressRing
+  vsCodeDropdown, vsCodeOption, Dropdown, vsCodeProgressRing, vsCodeTextArea, ProgressRing, vsCodeCheckbox
 } from "@vscode/webview-ui-toolkit";
 import { getUri } from "../utilities/getUri.js";
 
 
-provideVSCodeDesignSystem().register(vsCodeButton(), vsCodeDropdown(), vsCodeOption(), vsCodeProgressRing(), vsCodeTextArea());
+provideVSCodeDesignSystem().register(vsCodeButton(), vsCodeDropdown(), vsCodeOption(), vsCodeProgressRing(), vsCodeCheckbox(), vsCodeTextArea());
 const vscode = acquireVsCodeApi();
 
 window.addEventListener('load', main);
@@ -27,12 +27,12 @@ function handleStartClick() {
   const textArea = document.getElementById('textContent');
   vscode.postMessage({
     command: 'message',
-    text: "prova ricerca" 
+    text: "prova ricerca"
   });
   vscode.postMessage({
-    command:'createTxtFile',
+    command: 'createTxtFile',
     text: textArea.value
-   });
+  });
 
 }
 function progressRinghidden() {
@@ -49,30 +49,59 @@ function findFile() {
 
 function setSamplesAndHideProgress(allSamples, textArea, progressRing) {
   const startButton = document.getElementById('start');
-  const samplesText = allSamples.join('\n');
-  textArea.value = samplesText;
+  //const samplesText = allSamples.join('\n');
+  //textArea.value = samplesText;
   progressRing.classList.add('hidden');
-  textArea.classList.remove('hidden');
+  //textArea.classList.remove('hidden');
   startButton?.removeAttribute('disabled');
-  }
-  function postImplementatio(implementation:string){
-    vscode.postMessage({
-      command: implementation, 
-    });
-  }
+  provachekbox(allSamples);
+}
+function provachekbox(allSamples) {
+  const textArea = document.getElementById('textContent');
+  let seeds = allSamples.slice();
+  const contentDiv = document.getElementById('content');
 
-function  chosenimplementation(){
+  seeds.forEach((seed, index) => {
+    const checkbox = document.createElement('vscode-checkbox');
+    checkbox.setAttribute('checked', '');
+    checkbox.textContent = seed;
+    checkbox.addEventListener('click', () => {
+      if (checkbox.hasAttribute('checked')) {
+        seeds.splice(seeds.indexOf(seed), 1);
+      } else {
+        seeds.push(seed);
+      }
+      updateTextarea(seeds, textArea);
+    });
+    contentDiv.appendChild(checkbox);
+  });
+  textArea.value = seeds.join('\n');
+  //textArea.classList.remove('hidden'); //eliminare il commento se si verificano problemi nella creazione del file
+}
+
+function updateTextarea(seeds, textArea) {
+  textArea.value = seeds.join('\n');
+}
+
+
+function postImplementatio(implementation: string) {
+  vscode.postMessage({
+    command: implementation,
+  });
+}
+
+function chosenimplementation() {
   const selectedOption = (document.getElementById('dropdown') as Dropdown).value;
   let selection;
   switch (selectedOption) {
     case 'option1': {
       postImplementatio('VUI-UPSET');
-      
+
     }
       break;
     case 'option2': {
       postImplementatio('GRSBV');
-      
+
     } break;
     case 'option3': {
       postImplementatio('ChatGpt');
@@ -161,7 +190,7 @@ async function eventListern() {
         progressRinghidden();
       }
         break;
-      case 'SavedFile':{
+      case 'SavedFile': {
         chosenimplementation();
 
       }

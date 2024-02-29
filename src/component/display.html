@@ -1,12 +1,12 @@
 <vscode-button disabled id="start">Start!</vscode-button>
 
 <div class="options-container">
-        <label for="dropdown">Choose an option:</label>
-        <vscode-dropdown id="dropdown">
-            <vscode-option value="option1">VUI-UPSET</vscode-option>
-            <vscode-option value="option2">GRSBV</vscode-option>
-            <vscode-option value="option3">Chatgpt</vscode-option>
-        </vscode-dropdown>
+    <label for="dropdown">Choose an option:</label>
+    <vscode-dropdown id="dropdown">
+        <vscode-option value="option1">VUI-UPSET</vscode-option>
+        <vscode-option value="option2">GRSBV</vscode-option>
+        <vscode-option value="option3">Chatgpt</vscode-option>
+    </vscode-dropdown>
 </div>
 <div class="slider-container">
     <label>selziona la percentuale di generazione frasi</label>
@@ -16,10 +16,12 @@
 
 
 <div class="container">
-   
+    <div id="content"></div>
     <div class="centered">
-        <vscode-text-area id="textContent"resize="both"class="hidden" rows="45" cols="150" autofocus="true"></vscode-text-area>
-        <input type="file"  id="fileInput" class="hidden">
-         <vscode-progress-ring id="progressRing"></vscode-progress-ring>
-        </div>
+
+        <vscode-text-area id="textContent" resize="both" class="hidden" rows="45" cols="150" autofocus="true">
+        </vscode-text-area>
+        <input type="file" id="fileInput" class="hidden">
+        <vscode-progress-ring id="progressRing"></vscode-progress-ring>
+    </div>
 </div>

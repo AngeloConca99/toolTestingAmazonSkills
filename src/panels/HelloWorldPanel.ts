@@ -129,8 +129,9 @@ export class HelloWorldPanel {
     }
   }
 
-  private async runScript(command: string) {
-    
+  private async runScript(command: any) {
+
+
     try {
       if (!this.workspaceTmpPath) {
         vscode.window.showErrorMessage("La cartella temporanea non è stata trovata.");
@@ -204,13 +205,12 @@ export class HelloWorldPanel {
 
   }
 
-  private async _setWebviewMessageListener(webview: vscode.Webview) {
+  private _setWebviewMessageListener(webview: vscode.Webview) {
+    let absoluteScriptPath;
     webview.onDidReceiveMessage(
       async (message: any) => {
         const command = message.command;
         const text = message.text;
-        const absoluteScriptPath;
-
         switch (command) {
           case 'message':
             vscode.window.showInformationMessage(text);
@@ -224,15 +224,7 @@ export class HelloWorldPanel {
           case 'createTxtFile':
             this.CreateTxtFile(text, webview);
             break;
-          case 'ChatGpt':
-            absoluteScriptPath = path.join(__dirname, '/implementations/chatGPT-prompt.py');
-            this.runScript(`python ${absoluteScriptPath} ${this.workspaceTmpPath} > ${this.outputPath}`);
-            break;
-          case'GRSBV':
-            absoluteScriptPath = path.join(__dirname, '/implementations/GRSBV.Jar');
-            this.runScript(`java jar ${absoluteScriptPath} ${this.workspaceTmpPath} > ${this.outputPath}`);
-            break;
-          case'VUI-UPSET':
+          case 'VUI-UPSET':
             absoluteScriptPath = path.join(__dirname, '/implementations/VUI-UPSET.Jar');
             this.runScript(`java jar ${absoluteScriptPath} ${this.workspaceTmpPath} > ${this.outputPath}`);
             break;
