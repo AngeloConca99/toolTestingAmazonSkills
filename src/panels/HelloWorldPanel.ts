@@ -131,7 +131,7 @@ export class HelloWorldPanel {
   private async runChatGptScript(scriptPath: string) {
     try {
       if (!this.workspaceTmpPath) {
-        vscode.window.showErrorMessage('La cartella temporanea non è stata trovata.');
+        vscode.window.showErrorMessage("La cartella temporanea non è stata trovata.");
         return;
       }
 
@@ -144,24 +144,50 @@ export class HelloWorldPanel {
 
       child_process.exec(command, (error, stdout, stderr) => {
         if (error) {
-          vscode.window.showErrorMessage(`Errore durante l'esecuzione dello script Python: ${error.message}`);
+          vscode.window.showErrorMessage("Errore durante l'esecuzione dello script Python:"+ error.message);
           return;
         }
         if (stderr) {
-          vscode.window.showErrorMessage(`Errore durante l'esecuzione dello script Python: ${stderr}`);
+          vscode.window.showErrorMessage("Errore durante l'esecuzione dello script Python:" +stderr);
           return;
         }
-        vscode.window.showInformationMessage(`Lo script Python è stato eseguito correttamente. Output salvato in: ${this.outputPath}`);
+        vscode.window.showInformationMessage("Lo script Python è stato eseguito correttamente. Output salvato in:" +this.outputPath);
       });
     } catch (error) {
-      vscode.window.showErrorMessage(`Errore durante l'esecuzione dello script Python: ${error}`);
+      vscode.window.showErrorMessage("Errore durante l'esecuzione dello script Python:" +error );
     }
   }
+  private async runJavaScript(scriptPath: string){
+      try {
+        if (!this.workspaceTmpPath) {
+          vscode.window.showErrorMessage("La cartella temporanea non è stata trovata.");
+          return;
+        }
+  
+        this.outputPath = path.join(this.workspaceTmpPath, 'output.txt');
+  
+        const extensionPath = __dirname;
+        const absoluteScriptPath = path.join(extensionPath, scriptPath);
+  
+        const command = `java jar ${absoluteScriptPath} ${this.workspaceTmpPath} > ${this.outputPath}`;
+  
+        child_process.exec(command, (error, stdout, stderr) => {
+          if (error) {
+            vscode.window.showErrorMessage("Errore durante l'esecuzione dello script java:"+ error.message);
+            return;
+          }
+          if (stderr) {
+            vscode.window.showErrorMessage("Errore durante l'esecuzione dello script java:" + stderr);
+            return;
+          }
+          vscode.window.showInformationMessage("Lo script Python è stato eseguito correttamente. Output salvato in"+ this.outputPath);
+        });
+      } catch (error) {
+        vscode.window.showErrorMessage("Errore durante l'esecuzione dello script java:"+ error);
+      }
+    }
 
-
-
-
-  private async findFilesWithTimeout(include: vscode.GlobPattern, exclude?: vscode.GlobPattern, maxResults?: number, timeoutMillis?: number): Thenable<vscode.Uri[]> {
+    private async findFilesWithTimeout(include: vscode.GlobPattern, exclude?: vscode.GlobPattern, maxResults?: number, timeoutMillis?: number): Thenable<vscode.Uri[]> {
     const tokenSource = new vscode.CancellationTokenSource();
     const timeout = timeoutMillis ? setTimeout(() => tokenSource.cancel(), timeoutMillis) : undefined;
 
@@ -230,6 +256,13 @@ export class HelloWorldPanel {
             break;
           case 'ChatGpt':
             this.runChatGptScript('/implementations/chatGPT-prompt.py');
+            break;
+          case'GRSBV':
+          this.runJavaScript('/implementations/GRSBV.Jar');
+          break;
+          case'VUI-UPSET':
+          this.runJavaScript('/implementations/VUI-UPSET.jar');
+          break;
         }
       },
       undefined,

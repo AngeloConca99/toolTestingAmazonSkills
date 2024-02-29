@@ -55,7 +55,7 @@ function setSamplesAndHideProgress(allSamples, textArea, progressRing) {
   textArea.classList.remove('hidden');
   startButton?.removeAttribute('disabled');
   }
-  function postimplementatio(implementation:string){
+  function postImplementatio(implementation:string){
     vscode.postMessage({
       command: implementation, 
     });
@@ -66,19 +66,20 @@ function  chosenimplementation(){
   let selection;
   switch (selectedOption) {
     case 'option1': {
-      
+      postImplementatio('VUI-UPSET');
       
     }
       break;
     case 'option2': {
+      postImplementatio('GRSBV');
       
     } break;
     case 'option3': {
-      postimplementatio('ChatGpt');
+      postImplementatio('ChatGpt');
     }
       break;
     default:
-      postimplementatio('ChatGpt');
+      postImplementatio('ChatGpt');
   }
 }
 
