@@ -13,30 +13,6 @@
   ],
   "main": "/out/extension.js",
   "contributes": {
-    "viewsContainers": {
-      "viewsWelcome": [
-        {
-          "view": "skilltest",
-          "contents": "[TEST]Test your Alexa Skill"
-        }
-      ],
-      "activitybar": [
-        {
-          "id": "skilltest",
-          "title": "Alexa Skill Test",
-          "icon": "$(heart)"
-        }
-      ]
-    },
-    "views": {
-      "skilltest": [
-        {
-          "id": "toolkit-options",
-          "name": "Options",
-          "type": "webview"
-        }
-      ]
-    },
     "commands": [
       {
         "command": "alexa-skill-test-robustness.helloWorld",

@@ -8,6 +8,7 @@ import * as path from 'path';
 import * as child_process from 'child_process';
 
 export class HelloWorldPanel {
+
   public static currentPanel: HelloWorldPanel | undefined;
   private readonly _panel: vscode.WebviewPanel;
   private _disposables: vscode.Disposable[] = [];
@@ -128,7 +129,8 @@ export class HelloWorldPanel {
     }
   }
 
-  private async runChatGptScript(scriptPath: string) {
+  private async runScript(command: string) {
+    
     try {
       if (!this.workspaceTmpPath) {
         vscode.window.showErrorMessage("La cartella temporanea non è stata trovata.");
@@ -137,57 +139,23 @@ export class HelloWorldPanel {
 
       this.outputPath = path.join(this.workspaceTmpPath, 'output.txt');
 
-      const extensionPath = __dirname;
-      const absoluteScriptPath = path.join(extensionPath, scriptPath);
-
-      const command = `python ${absoluteScriptPath} ${this.workspaceTmpPath} > ${this.outputPath}`;
-
       child_process.exec(command, (error, stdout, stderr) => {
         if (error) {
-          vscode.window.showErrorMessage("Errore durante l'esecuzione dello script Python:"+ error.message);
+          vscode.window.showErrorMessage("Errore durante l'esecuzione dello script: " + error.message);
           return;
         }
         if (stderr) {
-          vscode.window.showErrorMessage("Errore durante l'esecuzione dello script Python:" +stderr);
+          vscode.window.showErrorMessage("Errore durante l'esecuzione dello script: " + stderr);
           return;
         }
-        vscode.window.showInformationMessage("Lo script Python è stato eseguito correttamente. Output salvato in:" +this.outputPath);
+        vscode.window.showInformationMessage("Lo script Python è stato eseguito correttamente. Output salvato in: " + this.outputPath);
       });
     } catch (error) {
-      vscode.window.showErrorMessage("Errore durante l'esecuzione dello script Python:" +error );
+      vscode.window.showErrorMessage("Errore durante l'esecuzione dello script: " + error);
     }
   }
-  private async runJavaScript(scriptPath: string){
-      try {
-        if (!this.workspaceTmpPath) {
-          vscode.window.showErrorMessage("La cartella temporanea non è stata trovata.");
-          return;
-        }
-  
-        this.outputPath = path.join(this.workspaceTmpPath, 'output.txt');
-  
-        const extensionPath = __dirname;
-        const absoluteScriptPath = path.join(extensionPath, scriptPath);
-  
-        const command = `java jar ${absoluteScriptPath} ${this.workspaceTmpPath} > ${this.outputPath}`;
-  
-        child_process.exec(command, (error, stdout, stderr) => {
-          if (error) {
-            vscode.window.showErrorMessage("Errore durante l'esecuzione dello script java:"+ error.message);
-            return;
-          }
-          if (stderr) {
-            vscode.window.showErrorMessage("Errore durante l'esecuzione dello script java:" + stderr);
-            return;
-          }
-          vscode.window.showInformationMessage("Lo script Python è stato eseguito correttamente. Output salvato in"+ this.outputPath);
-        });
-      } catch (error) {
-        vscode.window.showErrorMessage("Errore durante l'esecuzione dello script java:"+ error);
-      }
-    }
 
-    private async findFilesWithTimeout(include: vscode.GlobPattern, exclude?: vscode.GlobPattern, maxResults?: number, timeoutMillis?: number): Thenable<vscode.Uri[]> {
+  private async findFilesWithTimeout(include: vscode.GlobPattern, exclude?: vscode.GlobPattern, maxResults?: number, timeoutMillis?: number): Thenable<vscode.Uri[]> {
     const tokenSource = new vscode.CancellationTokenSource();
     const timeout = timeoutMillis ? setTimeout(() => tokenSource.cancel(), timeoutMillis) : undefined;
 
@@ -235,11 +203,13 @@ export class HelloWorldPanel {
     }
 
   }
+
   private async _setWebviewMessageListener(webview: vscode.Webview) {
     webview.onDidReceiveMessage(
       async (message: any) => {
         const command = message.command;
         const text = message.text;
+        const absoluteScriptPath;
 
         switch (command) {
           case 'message':
@@ -255,14 +225,17 @@ export class HelloWorldPanel {
             this.CreateTxtFile(text, webview);
             break;
           case 'ChatGpt':
-            this.runChatGptScript('/implementations/chatGPT-prompt.py');
+            absoluteScriptPath = path.join(__dirname, '/implementations/chatGPT-prompt.py');
+            this.runScript(`python ${absoluteScriptPath} ${this.workspaceTmpPath} > ${this.outputPath}`);
             break;
           case'GRSBV':
-          this.runJavaScript('/implementations/GRSBV.Jar');
-          break;
+            absoluteScriptPath = path.join(__dirname, '/implementations/GRSBV.Jar');
+            this.runScript(`java jar ${absoluteScriptPath} ${this.workspaceTmpPath} > ${this.outputPath}`);
+            break;
           case'VUI-UPSET':
-          this.runJavaScript('/implementations/VUI-UPSET.jar');
-          break;
+            absoluteScriptPath = path.join(__dirname, '/implementations/VUI-UPSET.Jar');
+            this.runScript(`java jar ${absoluteScriptPath} ${this.workspaceTmpPath} > ${this.outputPath}`);
+            break;
         }
       },
       undefined,
