@@ -13,10 +13,30 @@
   ],
   "main": "/out/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "alexaSkillTestRobustnessContainer",
+          "title": "Alexa Skill Test",
+          "icon": "$(file)"
+        }
+      ]
+    },
+    "views": {
+      "alexaSkillTestRobustnessContainer": [
+        {
+          "id": "alexaSkillTestRobustnessView",
+          "name": "Test Overview"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "alexa-skill-test-robustness.helloWorld",
         "title": "Inizializzazione"
+      },{
+        "command": "alexa-skill-test-robustness.openReadme",
+        "title": "README"
       }
     ]
   },
