@@ -26,13 +26,14 @@ async function main() {
 function handleStartClick() {
   const textArea = document.getElementById('textContent');
   vscode.postMessage({
-    command: 'message',
-    text: "prova ricerca"
-  });
-  vscode.postMessage({
     command: 'createTxtFile',
     text: textArea.value
   });
+  vscode.postMessage({
+    command: 'SliderValue',
+    value: sliderValue.value
+  });
+
 
 }
 function progressRinghidden() {
@@ -176,7 +177,7 @@ function seedLoading(samples) {
   }
 }
 
-async function eventListern() {
+function eventListern() {
   window.addEventListener('message', event => {
     const message = event.data;
     const command = message.command;
@@ -204,7 +205,7 @@ async function eventListern() {
 
 sliderValue.addEventListener('input', function () {
   let value = parseFloat(sliderValue.value);
-  value = Math.min(10, Math.max(0, value));
+  value = Math.min(100, Math.max(0, value));
   sliderValue.value = value;
   slider.value = value.toString();
 });

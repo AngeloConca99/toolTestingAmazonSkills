@@ -6,6 +6,7 @@ import { getNonce } from "../utilities/getNonce";
 import { lstat } from "fs";
 import * as path from 'path';
 import * as child_process from 'child_process';
+import * as fs from 'fs/promises';
 
 export class HelloWorldPanel {
 
@@ -15,7 +16,8 @@ export class HelloWorldPanel {
   private readonly timeoutMillis: number = 20000;
   private workspaceTmpPath: string = '';
   private outputPath: string = '';
-  private TextFilePath:string='';
+  private TextFilePath: string = '';
+  private ScoreSeed: number = 0;
 
   private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
     this._panel = panel;
@@ -99,7 +101,7 @@ export class HelloWorldPanel {
     }
   }
 
-  private async CreateTxtFile(text: string, webview: vscode.Webview) {
+  private CreateTxtFile(text: string, webview: vscode.Webview) {
     try {
       const workspaceFolders = vscode.workspace.workspaceFolders;
       if (!workspaceFolders || workspaceFolders.length === 0) {
@@ -111,18 +113,18 @@ export class HelloWorldPanel {
       this.workspaceTmpPath = path.join(workspaceFolder.uri.fsPath, 'tmp');
       const folderPath = this.workspaceTmpPath;
       const fileName = 'input.txt';
-      this.TextFilePath=path.join(this.workspaceTmpPath,fileName);
-      await this.saveFileInFolder(text, folderPath, fileName, webview);
+      this.TextFilePath = path.join(this.workspaceTmpPath, fileName);
+      this.saveFileInFolder(text, folderPath, fileName, webview);
     } catch (error) {
       vscode.window.showErrorMessage('Errore durante la creazione del file: ' + error);
     }
   }
 
-  private async saveFileInFolder(content: string, folderPath: string, fileName: string, webview: vscode.Webview) {
+  private saveFileInFolder(content: string, folderPath: string, fileName: string, webview: vscode.Webview) {
     const fullPath = vscode.Uri.file(path.join(folderPath, fileName));
     const contentBuffer = Buffer.from(content, 'utf8');
     try {
-      await vscode.workspace.fs.writeFile(fullPath, contentBuffer);
+      vscode.workspace.fs.writeFile(fullPath, contentBuffer);
       vscode.window.showInformationMessage('File salvato con successo.');
       webview.postMessage({ command: 'SavedFile' });
 
@@ -130,33 +132,59 @@ export class HelloWorldPanel {
       vscode.window.showErrorMessage('Si è verificato un errore durante il salvataggio del file: ' + error);
     }
   }
-
-  private async runScript(command: any) {
-
+  private async filteredGenerated(): Promise<void> {
+    const workspacePath = this.workspaceTmpPath;
+    const combinedOutputPath = path.join(workspacePath, 'combined_output.json');
+    const outputPath = path.join(workspacePath, 'output.json');
+    const outputFolderPath = path.join(workspacePath, 'output');
 
     try {
-      if (!this.workspaceTmpPath) {
-        vscode.window.showErrorMessage("La cartella temporanea non è stata trovata.");
-        return;
-      }
+      
+        const data = await fs.readFile(combinedOutputPath, 'utf8');
+        const jsonData = JSON.parse(data);
 
-      this.outputPath = path.join(this.workspaceTmpPath, 'output');
+        
+        const filteredData = jsonData.filter((item: any) => item.score >=  this.ScoreSeed);
 
-      child_process.exec(command, (error, stdout, stderr) => {
-        if (error) {
-          vscode.window.showErrorMessage("Errore durante l'esecuzione dello script: " + error.message);
-          return;
-        }
-        if (stderr) {
-          vscode.window.showErrorMessage("Errore durante l'esecuzione dello script: " + stderr);
-          return;
-        }
-        vscode.window.showInformationMessage("Lo script Python è stato eseguito correttamente. Output salvato in: " + this.outputPath);
-      });
+        await fs.writeFile(outputPath, JSON.stringify(filteredData, null, 2));
+        
+
+        await fs.unlink(combinedOutputPath);
+    
+
+        
+            await fs.access(outputFolderPath);
+            await fs.rm(outputFolderPath, { recursive: true });
+      
     } catch (error) {
-      vscode.window.showErrorMessage("Errore durante l'esecuzione dello script: " + error);
+        console.error('Errore durante la filtrazione e la gestione dei dati:', error);
     }
-  }
+}
+
+  private runScript(command: any) {
+    try {
+        if (!this.workspaceTmpPath) {
+            vscode.window.showErrorMessage("La cartella temporanea non è stata trovata.");
+            return;
+        }
+
+        this.outputPath = path.join(this.workspaceTmpPath, 'output');
+
+        child_process.exec(command, async (error, stdout, stderr) => {
+            if (error) {
+                vscode.window.showErrorMessage("Errore durante l'esecuzione dello script: " + error.message);
+                return;
+            }
+            vscode.window.showInformationMessage("Lo script è stato eseguito correttamente. Output salvato in: " + this.outputPath);
+            
+            
+            await this.filteredGenerated();
+        });
+    } catch (error) {
+        vscode.window.showErrorMessage("Errore durante l'esecuzione dello script: " + error.message);
+    }
+}
+
 
   private async findFilesWithTimeout(include: vscode.GlobPattern, exclude?: vscode.GlobPattern, maxResults?: number, timeoutMillis?: number): Thenable<vscode.Uri[]> {
     const tokenSource = new vscode.CancellationTokenSource();
@@ -213,6 +241,7 @@ export class HelloWorldPanel {
       async (message: any) => {
         const command = message.command;
         const text = message.text;
+        const value = message.value;
         switch (command) {
           case 'message':
             vscode.window.showInformationMessage(text);
@@ -223,6 +252,9 @@ export class HelloWorldPanel {
           case 'errorMessage':
             vscode.window.showErrorMessage(text);
             break;
+          case 'SliderValue':
+            this.ScoreSeed = value / 100;
+            break;
           case 'createTxtFile':
             this.CreateTxtFile(text, webview);
             break;
@@ -230,6 +262,7 @@ export class HelloWorldPanel {
             absoluteScriptPath = path.join(__dirname, '/implementations/VUI-UPSET.Jar');
             this.runScript(`java -jar ${absoluteScriptPath} ${this.TextFilePath} ${this.outputPath}`);
             break;
+
         }
       },
       undefined,
