@@ -15,6 +15,7 @@ export class HelloWorldPanel {
   private readonly timeoutMillis: number = 20000;
   private workspaceTmpPath: string = '';
   private outputPath: string = '';
+  private TextFilePath:string='';
 
   private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
     this._panel = panel;
@@ -109,7 +110,8 @@ export class HelloWorldPanel {
       const workspaceFolder = workspaceFolders[0];
       this.workspaceTmpPath = path.join(workspaceFolder.uri.fsPath, 'tmp');
       const folderPath = this.workspaceTmpPath;
-      const fileName = 'seed-file.txt';
+      const fileName = 'input.txt';
+      this.TextFilePath=path.join(this.workspaceTmpPath,fileName);
       await this.saveFileInFolder(text, folderPath, fileName, webview);
     } catch (error) {
       vscode.window.showErrorMessage('Errore durante la creazione del file: ' + error);
@@ -138,7 +140,7 @@ export class HelloWorldPanel {
         return;
       }
 
-      this.outputPath = path.join(this.workspaceTmpPath, 'output.txt');
+      this.outputPath = path.join(this.workspaceTmpPath, 'output');
 
       child_process.exec(command, (error, stdout, stderr) => {
         if (error) {
@@ -226,7 +228,7 @@ export class HelloWorldPanel {
             break;
           case 'VUI-UPSET':
             absoluteScriptPath = path.join(__dirname, '/implementations/VUI-UPSET.Jar');
-            this.runScript(`java jar ${absoluteScriptPath} ${this.workspaceTmpPath} > ${this.outputPath}`);
+            this.runScript(`java -jar ${absoluteScriptPath} ${this.TextFilePath} ${this.outputPath}`);
             break;
         }
       },
