@@ -12,11 +12,13 @@ This Visual Studio Code extension facilitates robustness testing of Alexa skills
 ## Prerequisites
 
 - **Java JRE 8**: Java JRE 8 is required for the extension to function. Make sure it is installed and configured on your system.
+- **Node.js**: Node.js is necessary for managing the extension's dependencies and running the build process. Ensure that you have Node.js installed on your system. You can download it from [https://nodejs.org/](https://nodejs.org/).
 
 ## Installation
 
-1. Search for "Alexa-Skill-Test-Robustness" in the Visual Studio Code Marketplace.
-2. Click on "Install" to install the extension.
+1. Open a terminal or command prompt.
+2. Navigate to the root directory of the extension.
+3. Run `npm install` to install all the necessary dependencies.
 
 ## Usage
 
