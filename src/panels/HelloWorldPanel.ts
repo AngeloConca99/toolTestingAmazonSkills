@@ -4,6 +4,7 @@ import * as vscode from "vscode";
 import { getUri } from "../utilities/getUri";
 import { getNonce } from "../utilities/getNonce";
 import { lstat } from "fs";
+import { quoteSpaces } from "../utilities/quoteSpaces";
 import * as path from 'path';
 import * as child_process from 'child_process';
 import * as fs from 'fs/promises';
@@ -259,8 +260,8 @@ export class HelloWorldPanel {
             this.CreateTxtFile(text, webview);
             break;
           case 'VUI-UPSET':
-            absoluteScriptPath = path.join(__dirname, '/implementations/VUI-UPSET.Jar');
-            this.runScript(`java -jar ${absoluteScriptPath} ${this.TextFilePath} ${this.outputPath}`);
+            absoluteScriptPath = path.join(__dirname, '/implementations/VUI-UPSET.jar');
+            this.runScript(`java -jar ${quoteSpaces(absoluteScriptPath)} ${quoteSpaces(this.TextFilePath)} ${quoteSpaces(this.outputPath)}`);
             break;
 
         }
