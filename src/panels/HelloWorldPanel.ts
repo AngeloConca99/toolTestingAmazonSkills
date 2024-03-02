@@ -1,12 +1,14 @@
 // file: src/panels/HelloWorldPanel.ts
 
-import * as vscode from "vscode";
+
+import  {AlexaUtteranceTester} from'./../utilities/AlexaUtteranceTester';
 import { getUri } from "../utilities/getUri";
 import { getNonce } from "../utilities/getNonce";
 import { lstat } from "fs";
 import * as path from 'path';
-import * as child_process from 'child_process';
+import * as childProcess from 'child_process';
 import * as fs from 'fs/promises';
+import * as vscode from "vscode";
 
 export class HelloWorldPanel {
 
@@ -170,7 +172,7 @@ export class HelloWorldPanel {
 
         this.outputPath = path.join(this.workspaceTmpPath, 'output');
 
-        child_process.exec(command, async (error, stdout, stderr) => {
+        childProcess.exec(command, async (error, stdout, stderr) => {
             if (error) {
                 vscode.window.showErrorMessage("Errore durante l'esecuzione dello script: " + error.message);
                 return;
@@ -259,7 +261,7 @@ export class HelloWorldPanel {
             this.CreateTxtFile(text, webview);
             break;
           case 'VUI-UPSET':
-            absoluteScriptPath = path.join(__dirname, '/implementations/VUI-UPSET.Jar');
+            absoluteScriptPath = path.join(__dirname, '/implementations/VUI-UPSET.jar');
             this.runScript(`java -jar ${absoluteScriptPath} ${this.TextFilePath} ${this.outputPath}`);
             break;
 
@@ -270,3 +272,5 @@ export class HelloWorldPanel {
     );
   }
 }
+/*const tester = new AlexaUtteranceTester('./path/to/your/file.json', 'your-skill-id');
+tester.runSimulations();*/
