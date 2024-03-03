@@ -55,14 +55,15 @@ function setSamplesAndHideProgress(allSamples, textArea, progressRing) {
   progressRing.classList.add('hidden');
   //textArea.classList.remove('hidden');
   startButton?.removeAttribute('disabled');
-  provachekbox(allSamples);
+  createcheckbox(allSamples);
 }
-function provachekbox(allSamples) {
+
+function createcheckbox(allSamples) {
   const textArea = document.getElementById('textContent');
   let seeds = allSamples.slice();
   const contentDiv = document.getElementById('content');
 
-  seeds.forEach((seed, index) => {
+  seeds.forEach((seed) => {
     const checkbox = document.createElement('vscode-checkbox');
     checkbox.setAttribute('checked', '');
     checkbox.textContent = seed;
@@ -89,28 +90,6 @@ function postImplementatio(implementation: string) {
   vscode.postMessage({
     command: implementation,
   });
-}
-
-function chosenimplementation() {
-  const selectedOption = (document.getElementById('dropdown') as Dropdown).value;
-  let selection;
-  switch (selectedOption) {
-    case 'option1': {
-      postImplementatio('VUI-UPSET');
-
-    }
-      break;
-    case 'option2': {
-      postImplementatio('GRSBV');
-
-    } break;
-    case 'option3': {
-      postImplementatio('ChatGpt');
-    }
-      break;
-    default:
-      postImplementatio('ChatGpt');
-  }
 }
 
 function handleFileSelect() {
@@ -167,6 +146,7 @@ function handleFileSelect() {
 
   reader.readAsText(file);
 }
+
 function seedLoading(samples) {
   const input = document.getElementById('fileInput');
   try {
@@ -176,7 +156,7 @@ function seedLoading(samples) {
   } catch (error) {
     vscode.postMessage({
       command: 'errorMessage',
-      text: "error while loading " + error.message
+      text: error.message
     });
     progressRinghidden();
   }
@@ -197,7 +177,7 @@ function eventListern() {
       }
         break;
       case 'SavedFile': {
-        chosenimplementation();
+        postImplementatio('VUI-UPSET');
         break;
       }
       case'filteredFinished':{

@@ -90,7 +90,7 @@ export class HelloWorldPanel {
       const displayHtmlContent = fs.readFileSync(htmlPath, 'utf-8');
       return displayHtmlContent;
     } catch (error) {
-      throw new Error('Errore durante il recupero del contenuto HTML');
+      throw new Error("Error retrieving HTML content");
     }
   }
 
@@ -102,7 +102,7 @@ export class HelloWorldPanel {
       const cssUri = getUri(webview, extensionUri, ["out", cssDefault]);
       return cssUri;
     } catch (error) {
-      throw new Error('Errore durante il recupero del contenuto Css');
+      throw new Error("Error retrieving CSS content");
     }
   }
 
@@ -110,7 +110,7 @@ export class HelloWorldPanel {
     try {
       const workspaceFolders = vscode.workspace.workspaceFolders;
       if (!workspaceFolders || workspaceFolders.length === 0) {
-        vscode.window.showErrorMessage('Nessuna cartella di lavoro trovata.');
+        vscode.window.showErrorMessage("Workspace folder not found");
         return;
       }
 
@@ -121,7 +121,7 @@ export class HelloWorldPanel {
       this.TextFilePath = path.join(this.workspaceTmpPath, fileName);
       this.saveFileInFolder(text, folderPath, fileName, webview);
     } catch (error) {
-      vscode.window.showErrorMessage('Errore durante la creazione del file: ' + error);
+      vscode.window.showErrorMessage("Error in file creation: " + error.message);
     }
   }
 
@@ -130,9 +130,9 @@ export class HelloWorldPanel {
     const contentBuffer = Buffer.from(content, 'utf8');
     try {
       vscode.workspace.fs.writeFile(fullPath, contentBuffer);
-      vscode.window.showInformationMessage('File salvato con successo.');
+      vscode.window.showInformationMessage("File successfully saved");
      } catch (error) {
-      vscode.window.showErrorMessage('Si è verificato un errore durante il salvataggio del file: ' + error);
+      vscode.window.showErrorMessage("An error occurred shile saving the file: " + error.message);
     }
     webview.postMessage({ command: 'SavedFile' });
   }
@@ -161,7 +161,7 @@ export class HelloWorldPanel {
             await fs.rm(outputFolderPath, { recursive: true });
       
     } catch (error) {
-        vscode.window.showErrorMessage('Errore durante la filtrazione e la gestione dei dati:', error);
+        vscode.window.showErrorMessage("An error occurred during file management: " + error.message);
     }
     
 }
@@ -169,7 +169,7 @@ export class HelloWorldPanel {
   private runScript(command: string,webview: vscode.Webview) {
     try {
         if (!this.workspaceTmpPath) {
-            vscode.window.showErrorMessage("La cartella temporanea non è stata trovata.");
+            vscode.window.showErrorMessage("Temporary folder not found");
             return;
         }
 
@@ -177,17 +177,18 @@ export class HelloWorldPanel {
 
         childProcess.exec(command, async (error, stdout, stderr) => {
             if (error) {
-                vscode.window.showErrorMessage("Errore durante l'esecuzione dello script: " + error.message);
+                vscode.window.showErrorMessage("Error while executing the script: " + error.message);
                 return;
             }
-            vscode.window.showInformationMessage("Lo script è stato eseguito correttamente. Output salvato in: " + this.outputPath);
+            vscode.window.showInformationMessage("Script successfully executed. Output saved in " + this.outputPath);
             
             
            await this.filteredGenerated();
            webview.postMessage({ command: 'filteredFinished' });
+           vscode.commands.executeCommand('vscode.open', vscode.Uri.file(this.outputPath + ".json"), { preview: false, viewColumn: vscode.ViewColumn.One });
         });
     } catch (error) {
-        vscode.window.showErrorMessage("Errore durante l'esecuzione dello script: " + error.message);
+        vscode.window.showErrorMessage("Error while executing the script: " + error.message);
     }
 }
 
@@ -238,7 +239,7 @@ export class HelloWorldPanel {
         webview.postMessage({ command: 'JsonFile', samples: allSamples });
       }
     } catch (error) {
-      vscode.window.showErrorMessage("error loading file: " + error);
+      vscode.window.showErrorMessage("Error loading file: " + error.message);
       webview.postMessage({ command: 'JsonFileNotFound' });
     }
 
@@ -247,16 +248,16 @@ export class HelloWorldPanel {
   private async startUtteranceTesting() {
     try {
       if (!this.invocationName) {
-        vscode.window.showErrorMessage("Nome dell'invocazione non specificato.");
+        vscode.window.showErrorMessage("Unspecified invocation name");
         return;
       }
       const filePath=path.join(this.workspaceTmpPath, 'output.json');
   
       const utteranceTester = new AlexaUtteranceTester(filePath,this.invocationName);
       await utteranceTester.runSimulations();
-      vscode.window.showInformationMessage("Test delle utterances completato con successo.");
+      vscode.window.showInformationMessage("Utterances test successfully completed.");
     } catch (error) {
-      vscode.window.showErrorMessage(`Errore durante il test delle utterances: ${error}`);
+      vscode.window.showErrorMessage("An error occurred in utterances testing: " + error.message);
     }
   }
   
@@ -286,7 +287,11 @@ export class HelloWorldPanel {
             break;
           case 'VUI-UPSET':
             absoluteScriptPath = path.join(__dirname, '/implementations/VUI-UPSET.jar');
+            // finalpath = path.join(absoluteScriptPath, this.TextFilePath, this.outputPath);
             this.runScript(`java -jar ${quoteSpaces(absoluteScriptPath)} ${quoteSpaces(this.TextFilePath)} ${quoteSpaces(this.outputPath)}`,webview);
+            console.log(this.outputPath + ".json");
+            
+            //apri il file;
             break;
           case 'SkillName':
             this.invocationName=text;
