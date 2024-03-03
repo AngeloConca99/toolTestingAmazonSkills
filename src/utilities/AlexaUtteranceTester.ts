@@ -75,7 +75,7 @@ export class AlexaUtteranceTester {
     const summaryFilePath = path.join(path.dirname(this.filePath), 'test_summary.txt');
 
     fs.writeFileSync(summaryFilePath, summaryLines.join(''));
-    console.log(`File di riepilogo test salvato in: ${summaryFilePath}`);
+    vscode.window.showInformationMessage(`File di riepilogo test salvato in: ${summaryFilePath}`);
 }
 
 
@@ -112,7 +112,6 @@ private async simulateUtterance(utterance: string): Promise<void> {
 
           const simulationIdsFilePath = path.join(path.dirname(this.filePath), 'simulation_ids.txt');
           fs.appendFileSync(simulationIdsFilePath, `${simulationId}\n`);
-          throw new Error('ID di simulazione non trovato.');
       }
   } catch (error) {
       console.error(`Errore durante la simulazione: ${error}`);

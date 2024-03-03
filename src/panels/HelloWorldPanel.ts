@@ -119,23 +119,24 @@ export class HelloWorldPanel {
       const folderPath = this.workspaceTmpPath;
       const fileName = 'input.txt';
       this.TextFilePath = path.join(this.workspaceTmpPath, fileName);
+      this.outputPath = path.join(this.workspaceTmpPath, 'output');
       this.saveFileInFolder(text, folderPath, fileName, webview);
     } catch (error) {
       vscode.window.showErrorMessage('Errore durante la creazione del file: ' + error);
     }
   }
 
-  private saveFileInFolder(content: string, folderPath: string, fileName: string, webview: vscode.Webview) {
+  private  saveFileInFolder(content: string, folderPath: string, fileName: string, webview: vscode.Webview) {
     const fullPath = vscode.Uri.file(path.join(folderPath, fileName));
     const contentBuffer = Buffer.from(content, 'utf8');
     try {
       vscode.workspace.fs.writeFile(fullPath, contentBuffer);
       vscode.window.showInformationMessage('File salvato con successo.');
+      webview.postMessage({ command: 'SavedFile' });
      } catch (error) {
       vscode.window.showErrorMessage('Si è verificato un errore durante il salvataggio del file: ' + error);
     }
-    webview.postMessage({ command: 'SavedFile' });
-  }
+   }
   private async filteredGenerated(): Promise<void> {
     const workspacePath = this.workspaceTmpPath;
     const combinedOutputPath = path.join(workspacePath, 'combined_output.json');
@@ -173,15 +174,12 @@ export class HelloWorldPanel {
             return;
         }
 
-        this.outputPath = path.join(this.workspaceTmpPath, 'output');
-
         childProcess.exec(command, async (error, stdout, stderr) => {
             if (error) {
                 vscode.window.showErrorMessage("Errore durante l'esecuzione dello script: " + error.message);
                 return;
             }
             vscode.window.showInformationMessage("Lo script è stato eseguito correttamente. Output salvato in: " + this.outputPath);
-            
             
            await this.filteredGenerated();
            webview.postMessage({ command: 'filteredFinished' });
@@ -250,11 +248,10 @@ export class HelloWorldPanel {
         vscode.window.showErrorMessage("Nome dell'invocazione non specificato.");
         return;
       }
-      const filePath=path.join(this.workspaceTmpPath, 'output.json');
+    const filePath=path.join(this.workspaceTmpPath, 'output.json');
   
       const utteranceTester = new AlexaUtteranceTester(filePath,this.invocationName);
       await utteranceTester.runSimulations();
-      vscode.window.showInformationMessage("Test delle utterances completato con successo.");
     } catch (error) {
       vscode.window.showErrorMessage(`Errore durante il test delle utterances: ${error}`);
     }
@@ -300,7 +297,7 @@ export class HelloWorldPanel {
       undefined,
       this._disposables
     );
-  }
+  } 
 }
 /*const tester = new AlexaUtteranceTester('./path/to/your/file.json', 'your-skill-id');
 tester.runSimulations();*/

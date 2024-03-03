@@ -17,7 +17,6 @@ async function main() {
   const slider = document.getElementById('slider') as Slider;
   const sliderValue = document.getElementById('sliderValue') as slidevalue;
   const startButton = document.getElementById('start') as Button;
-  const dropdown = document.getElementById('dropdown') as Dropdown;
   startButton?.addEventListener('click', handleStartClick);
   input?.addEventListener('change', handleFileSelect);
   findFile();
@@ -86,32 +85,12 @@ function updateTextarea(seeds, textArea) {
 
 
 function postImplementatio(implementation: string) {
+  
   vscode.postMessage({
     command: implementation,
   });
 }
 
-function chosenimplementation() {
-  const selectedOption = (document.getElementById('dropdown') as Dropdown).value;
-  let selection;
-  switch (selectedOption) {
-    case 'option1': {
-      postImplementatio('VUI-UPSET');
-
-    }
-      break;
-    case 'option2': {
-      postImplementatio('GRSBV');
-
-    } break;
-    case 'option3': {
-      postImplementatio('ChatGpt');
-    }
-      break;
-    default:
-      postImplementatio('ChatGpt');
-  }
-}
 
 function handleFileSelect() {
   const textArea = document.getElementById('textContent');
@@ -197,8 +176,8 @@ function eventListern() {
       }
         break;
       case 'SavedFile': {
-        chosenimplementation();
-        break;
+        postImplementatio('VUI-UPSET');
+      break;
       }
       case'filteredFinished':{
         vscode.postMessage({
