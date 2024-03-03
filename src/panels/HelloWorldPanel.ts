@@ -21,6 +21,8 @@ export class HelloWorldPanel {
   private outputPath: string = '';
   private TextFilePath: string = '';
   private ScoreSeed: number = 0;
+  private invocationName:string="";
+
 
   private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
     this._panel = panel;
@@ -129,11 +131,10 @@ export class HelloWorldPanel {
     try {
       vscode.workspace.fs.writeFile(fullPath, contentBuffer);
       vscode.window.showInformationMessage('File salvato con successo.');
-      webview.postMessage({ command: 'SavedFile' });
-
-    } catch (error) {
+     } catch (error) {
       vscode.window.showErrorMessage('Si è verificato un errore durante il salvataggio del file: ' + error);
     }
+    webview.postMessage({ command: 'SavedFile' });
   }
   private async filteredGenerated(): Promise<void> {
     const workspacePath = this.workspaceTmpPath;
@@ -160,11 +161,12 @@ export class HelloWorldPanel {
             await fs.rm(outputFolderPath, { recursive: true });
       
     } catch (error) {
-        console.error('Errore durante la filtrazione e la gestione dei dati:', error);
+        vscode.window.showErrorMessage('Errore durante la filtrazione e la gestione dei dati:', error);
     }
+    
 }
 
-  private runScript(command: any) {
+  private runScript(command: string,webview: vscode.Webview) {
     try {
         if (!this.workspaceTmpPath) {
             vscode.window.showErrorMessage("La cartella temporanea non è stata trovata.");
@@ -181,7 +183,8 @@ export class HelloWorldPanel {
             vscode.window.showInformationMessage("Lo script è stato eseguito correttamente. Output salvato in: " + this.outputPath);
             
             
-            await this.filteredGenerated();
+           await this.filteredGenerated();
+           webview.postMessage({ command: 'filteredFinished' });
         });
     } catch (error) {
         vscode.window.showErrorMessage("Errore durante l'esecuzione dello script: " + error.message);
@@ -207,20 +210,23 @@ export class HelloWorldPanel {
 
   private async postseed(webview: vscode.Webview) {
     try {
-      const jsonFiles = await this.findFilesWithTimeout('**/skill-package/interactionModels/custom/*.json', '**/node_modules/**', 100, this.timeoutMillis);
+      const jsonFiles = await this.findFilesWithTimeout('**/skill-package/interactionModels/custom/en-US.json', '**/node_modules/**', 1, this.timeoutMillis);
       let allSamples = [];
 
       for (const jsonFileUri of jsonFiles) {
         const jsonFileContent = await vscode.workspace.fs.readFile(jsonFileUri);
         const jsonString = new TextDecoder().decode(jsonFileContent);
         const fileJsonObject = JSON.parse(jsonString);
+        
 
         if (fileJsonObject && fileJsonObject.interactionModel && fileJsonObject.interactionModel.languageModel && fileJsonObject.interactionModel.languageModel.intents) {
-          fileJsonObject.interactionModel.languageModel.intents.forEach(intent => {
+           this.invocationName =fileJsonObject.interactionModel.languageModel.invocationName;
+            fileJsonObject.interactionModel.languageModel.intents.forEach(intent => {
             if (Array.isArray(intent.samples) && intent.samples.length > 0) {
               allSamples.push(...intent.samples);
             }
           });
+          console.log(`Il nome della skill è: ${this.invocationName}`);
         } else {
           throw new Error("Invalid or missing JSON file structure");
         }
@@ -237,6 +243,23 @@ export class HelloWorldPanel {
     }
 
   }
+
+  private async startUtteranceTesting() {
+    try {
+      if (!this.invocationName) {
+        vscode.window.showErrorMessage("Nome dell'invocazione non specificato.");
+        return;
+      }
+      const filePath=path.join(this.workspaceTmpPath, 'output.json');
+  
+      const utteranceTester = new AlexaUtteranceTester(filePath,this.invocationName);
+      await utteranceTester.runSimulations();
+      vscode.window.showInformationMessage("Test delle utterances completato con successo.");
+    } catch (error) {
+      vscode.window.showErrorMessage(`Errore durante il test delle utterances: ${error}`);
+    }
+  }
+  
 
   private _setWebviewMessageListener(webview: vscode.Webview) {
     let absoluteScriptPath;
@@ -263,8 +286,14 @@ export class HelloWorldPanel {
             break;
           case 'VUI-UPSET':
             absoluteScriptPath = path.join(__dirname, '/implementations/VUI-UPSET.jar');
-            this.runScript(`java -jar ${quoteSpaces(absoluteScriptPath)} ${quoteSpaces(this.TextFilePath)} ${quoteSpaces(this.outputPath)}`);
+            this.runScript(`java -jar ${quoteSpaces(absoluteScriptPath)} ${quoteSpaces(this.TextFilePath)} ${quoteSpaces(this.outputPath)}`,webview);
             break;
+          case 'SkillName':
+            this.invocationName=text;
+            break;
+            case'StartTesting':
+          this.startUtteranceTesting();
+          break;
 
         }
       },

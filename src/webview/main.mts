@@ -145,6 +145,11 @@ function handleFileSelect() {
           allSamples.push(...intent.samples);
         }
       });
+      const invocationName = json.interactionModel.languageModel.invocationName;
+      vscode.postMessage({
+        command: 'SkillName',
+        text: invocationName
+      });
 
       if (allSamples.length === 0) {
         throw new Error("No seed found in JSON file");
@@ -193,7 +198,13 @@ function eventListern() {
         break;
       case 'SavedFile': {
         chosenimplementation();
-
+        break;
+      }
+      case'filteredFinished':{
+        vscode.postMessage({
+          command: 'StartTesting'
+        });
+        break;
       }
 
 
