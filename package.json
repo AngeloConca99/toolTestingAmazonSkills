@@ -34,7 +34,8 @@
       {
         "command": "alexa-skill-test-robustness.helloWorld",
         "title": "Inizializzazione"
-      },{
+      },
+      {
         "command": "alexa-skill-test-robustness.openReadme",
         "title": "README"
       }
@@ -60,11 +61,12 @@
     "@vscode/test-electron": "^2.3.9",
     "esbuild": "^0.20.0",
     "eslint": "^8.56.0",
-    "typescript": "^5.3.3",
-    "fs-extra": "^11.2.0"
+    "fs-extra": "^11.2.0",
+    "typescript": "^5.3.3"
   },
   "dependencies": {
     "@types/html": "^1.0.4",
-    "@vscode/webview-ui-toolkit": "^1.4.0"
-    }
+    "@vscode/webview-ui-toolkit": "^1.4.0",
+    "axios": "^1.6.7"
+  }
 }
