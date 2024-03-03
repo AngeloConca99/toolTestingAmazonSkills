@@ -53,30 +53,38 @@ export class AlexaUtteranceTester {
     });
   }
   public generateTestSummaryFile(): void {
-
+    console.log("generazione file txt");
+    // Assumendo che i risultati delle simulazioni siano già stati raccolti e salvati in precedenza
     const simulationResultsFilePath = path.join(path.dirname(this.filePath), 'simulation_results.json');
-
     const simulationResultsData = fs.readFileSync(simulationResultsFilePath, 'utf8');
     const simulationResults = JSON.parse(simulationResultsData);
 
+    // Prepara le linee di riepilogo
     const summaryLines = simulationResults.map(result => {
-        const utterance = Object.keys(this.utteranceSimulationMap).find(key => this.utteranceSimulationMap[key] === result.id) || 'Utterance non trovata';
+        // Trova l'utterance corrispondente all'ID di simulazione nel risultato
+        const utterance = Object.entries(this.utteranceSimulationMap).find(([key, value]) => value === result.id)?.[0] || 'Utterance non trovata';
         const status = result.status;
         let message = 'Nessun messaggio di errore disponibile';
 
+        // Estrai il messaggio di errore o successo se presente
         if (result.result && result.result.error && result.result.error.message) {
             message = result.result.error.message;
         } else if (result.result && result.result.successMessage) {
             message = result.result.successMessage;
         }
+
+        // Ora ogni elemento va su una nuova riga come richiesto
         return `Utterance: ${utterance}\nSimulation ID: ${result.id}\nStatus: ${status}\nMessage: ${message}\n\n`;
     });
 
+    // Percorso al nuovo file di testo di riepilogo
     const summaryFilePath = path.join(path.dirname(this.filePath), 'test_summary.txt');
 
+    // Scrivi le informazioni nel nuovo file di testo
     fs.writeFileSync(summaryFilePath, summaryLines.join(''));
-    vscode.window.showInformationMessage(`File di riepilogo test salvato in: ${summaryFilePath}`);
+    console.log(`File di riepilogo test salvato in: ${summaryFilePath}`);
 }
+
 
 
   private async findSkillId(): Promise<void> {
@@ -96,6 +104,7 @@ export class AlexaUtteranceTester {
     }
 }
 private async simulateUtterance(utterance: string): Promise<void> {
+  console.log("simulazione in corso di " +utterance);
   if (!this.skillId) {
       throw new Error('Skill ID non trovato.');
   }
@@ -107,11 +116,9 @@ private async simulateUtterance(utterance: string): Promise<void> {
       const simulationId = response.id;
 
       if (simulationId) {
-          
           this.utteranceSimulationMap[utterance] = simulationId;
-
-          const simulationIdsFilePath = path.join(path.dirname(this.filePath), 'simulation_ids.txt');
-          fs.appendFileSync(simulationIdsFilePath, `${simulationId}\n`);
+      } else {
+          throw new Error('ID di simulazione non trovato.');
       }
   } catch (error) {
       console.error(`Errore durante la simulazione: ${error}`);
@@ -120,41 +127,35 @@ private async simulateUtterance(utterance: string): Promise<void> {
 }
 
 
+
 private async fetchSimulationResults(): Promise<void> {
-    return new Promise(async (resolve, reject) => {
-        const simulationIdsFilePath = path.join(path.dirname(this.filePath), 'simulation_ids.txt');
-        
-        fs.readFile(simulationIdsFilePath, 'utf8', async (err, data) => {
-            if (err) {
-                console.error(`Errore durante la lettura del file degli ID di simulazione: ${err}`);
-                return reject(err);
-            }
+  console.log("Recupero simulazioni in corso...");
+  const simulationResults = [];
 
-            const simulationIds = data.split('\n').filter(line => line.trim() !== '');
+  for (const [utterance, simulationId] of Object.entries(this.utteranceSimulationMap)) {
+      try {
+          const command = `ask smapi get-skill-simulation --simulation-id ${simulationId} --skill-id ${this.skillId}`;
+          const result = await this.executeCommand(command);
+          const parsedResult = JSON.parse(result);
+          simulationResults.push(parsedResult);
+      } catch (error) {
+          console.error(`Errore durante il recupero del risultato per la simulazione ${simulationId}: ${error}`);
+      }
+  }
 
-            const simulationResults = [];
-
-            for (const simulationId of simulationIds) {
-                try {
-                    const command = `ask smapi get-skill-simulation --simulation-id ${simulationId} --skill-id ${this.skillId}`;
-                    const result = await this.executeCommand(command);
-                    simulationResults.push(JSON.parse(result));
-                } catch (error) {
-                    console.error(`Errore durante il recupero del risultato per la simulazione ${simulationId}: ${error}`);
-                }
-            }
-
-            const resultsFilePath = path.join(path.dirname(this.filePath), 'simulation_results.json');
-            fs.writeFile(resultsFilePath, JSON.stringify(simulationResults, null, 2), (err) => {
-                if (err) {
-                    console.error(`Errore durante la scrittura dei risultati delle simulazioni: ${err}`);
-                    return reject(err);
-                }
-                resolve();
-            });
-        });
-    });
+  const resultsFilePath = path.join(path.dirname(this.filePath), 'simulation_results.json');
+  
+  // Utilizza fs.promises.writeFile per scrivere in modo asincrono
+  try {
+      await fs.promises.writeFile(resultsFilePath, JSON.stringify(simulationResults, null, 2));
+      console.log('Risultati delle simulazioni salvati con successo.');
+  } catch (err) {
+      console.error(`Errore durante la scrittura dei risultati delle simulazioni: ${err}`);
+      throw err;
+  }
 }
+
+
 
 private executeCommand(command: string): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -176,8 +177,9 @@ private executeCommand(command: string): Promise<string> {
       await this.findSkillId();
       await this.forWaiting();
       await this.fetchSimulationResults();
+      await this.generateTestSummaryFile();
       await this.calculateTestResults(path.join(path.dirname(this.filePath), 'simulation_results.json'));
-      this.generateTestSummaryFile();
+      
 
     } catch (error) {
       console.error(error);
