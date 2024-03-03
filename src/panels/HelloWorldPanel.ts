@@ -1,7 +1,7 @@
 // file: src/panels/HelloWorldPanel.ts
 
 
-import  {AlexaUtteranceTester} from'./../utilities/AlexaUtteranceTester';
+
 import { getUri } from "../utilities/getUri";
 import { getNonce } from "../utilities/getNonce";
 import { lstat } from "fs";
@@ -107,6 +107,7 @@ export class HelloWorldPanel {
   }
 
   private CreateTxtFile(text: string, webview: vscode.Webview) {
+    
     try {
       const workspaceFolders = vscode.workspace.workspaceFolders;
       if (!workspaceFolders || workspaceFolders.length === 0) {
@@ -116,6 +117,7 @@ export class HelloWorldPanel {
 
       const workspaceFolder = workspaceFolders[0];
       this.workspaceTmpPath = path.join(workspaceFolder.uri.fsPath, 'tmp');
+      this.outputPath = path.join(this.workspaceTmpPath, 'output');
       const folderPath = this.workspaceTmpPath;
       const fileName = 'input.txt';
       this.TextFilePath = path.join(this.workspaceTmpPath, fileName);
@@ -173,7 +175,6 @@ export class HelloWorldPanel {
             return;
         }
 
-        this.outputPath = path.join(this.workspaceTmpPath, 'output');
 
         childProcess.exec(command, async (error, stdout, stderr) => {
             if (error) {
@@ -184,6 +185,7 @@ export class HelloWorldPanel {
             
             
            await this.filteredGenerated();
+
            webview.postMessage({ command: 'filteredFinished' });
            vscode.commands.executeCommand('vscode.open', vscode.Uri.file(this.outputPath + ".json"), { preview: false, viewColumn: vscode.ViewColumn.One });
         });
@@ -244,22 +246,6 @@ export class HelloWorldPanel {
     }
 
   }
-
-  private async startUtteranceTesting() {
-    try {
-      if (!this.invocationName) {
-        vscode.window.showErrorMessage("Unspecified invocation name");
-        return;
-      }
-      const filePath=path.join(this.workspaceTmpPath, 'output.json');
-  
-      const utteranceTester = new AlexaUtteranceTester(filePath,this.invocationName);
-      await utteranceTester.runSimulations();
-      vscode.window.showInformationMessage("Utterances test successfully completed.");
-    } catch (error) {
-      vscode.window.showErrorMessage("An error occurred in utterances testing: " + error.message);
-    }
-  }
   
 
   private _setWebviewMessageListener(webview: vscode.Webview) {
@@ -287,7 +273,6 @@ export class HelloWorldPanel {
             break;
           case 'VUI-UPSET':
             absoluteScriptPath = path.join(__dirname, '/implementations/VUI-UPSET.jar');
-            // finalpath = path.join(absoluteScriptPath, this.TextFilePath, this.outputPath);
             this.runScript(`java -jar ${quoteSpaces(absoluteScriptPath)} ${quoteSpaces(this.TextFilePath)} ${quoteSpaces(this.outputPath)}`,webview);
             console.log(this.outputPath + ".json");
             
@@ -296,8 +281,6 @@ export class HelloWorldPanel {
           case 'SkillName':
             this.invocationName=text;
             break;
-            case'StartTesting':
-          this.startUtteranceTesting();
           break;
 
         }

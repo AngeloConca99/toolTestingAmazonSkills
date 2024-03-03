@@ -1,15 +1,16 @@
 import {
   provideVSCodeDesignSystem, vsCodeButton, Button,
-  vsCodeDropdown, vsCodeOption, Dropdown, vsCodeProgressRing, vsCodeTextArea, ProgressRing, vsCodeCheckbox
+  vsCodeDropdown, vsCodeOption, vsCodeProgressRing, vsCodeTextArea, ProgressRing, vsCodeCheckbox
 } from "@vscode/webview-ui-toolkit";
 import { getUri } from "../utilities/getUri.js";
+import { text } from "stream/consumers";
 
 
 provideVSCodeDesignSystem().register(vsCodeButton(), vsCodeDropdown(), vsCodeOption(), vsCodeProgressRing(), vsCodeCheckbox(), vsCodeTextArea());
 const vscode = acquireVsCodeApi();
 
 window.addEventListener('load', main);
-window.addEventListener('load', eventListern);
+window.addEventListener('load', eventListener);
 
 async function main() {
   let selection = 1;
@@ -17,14 +18,16 @@ async function main() {
   const slider = document.getElementById('slider') as Slider;
   const sliderValue = document.getElementById('sliderValue') as slidevalue;
   const startButton = document.getElementById('start') as Button;
-  const dropdown = document.getElementById('dropdown') as Dropdown;
+  const addSeed = document.getElementById('addSeed') as Button;
   startButton?.addEventListener('click', handleStartClick);
+  addSeed?.addEventListener('click', createInsertedCheckbox);
   input?.addEventListener('change', handleFileSelect);
   findFile();
 }
 
 function handleStartClick() {
-  const textArea = document.getElementById('textContent');
+  let textArea = document.getElementById('textContent');
+  // sostituire la textArea con la stringa di samples;
   vscode.postMessage({
     command: 'createTxtFile',
     text: textArea.value
@@ -55,10 +58,10 @@ function setSamplesAndHideProgress(allSamples, textArea, progressRing) {
   progressRing.classList.add('hidden');
   //textArea.classList.remove('hidden');
   startButton?.removeAttribute('disabled');
-  createcheckbox(allSamples);
+  createCheckbox(allSamples);
 }
 
-function createcheckbox(allSamples) {
+function createCheckbox(allSamples) {
   const textArea = document.getElementById('textContent');
   let seeds = allSamples.slice();
   const contentDiv = document.getElementById('content');
@@ -79,6 +82,18 @@ function createcheckbox(allSamples) {
   });
   textArea.value = seeds.join('\n');
   //textArea.classList.remove('hidden'); //eliminare il commento se si verificano problemi nella creazione del file
+}
+
+function createInsertedCheckbox(){
+  const insertedText = document.getElementById('insertedTextContent');
+  const checkbox = document.createElement('vscode-checkbox');
+  const insertedDiv = document.getElementById('insertedContent');
+  checkbox.setAttribute('checked', '');
+  if(this.insertedText.value !== ''){
+    checkbox.textContent = insertedText.value;
+    insertedText.value = '';
+    insertedDiv.appendChild(checkbox);
+  }
 }
 
 function updateTextarea(seeds, textArea) {
@@ -162,7 +177,7 @@ function seedLoading(samples) {
   }
 }
 
-function eventListern() {
+function eventListener() {
   window.addEventListener('message', event => {
     const message = event.data;
     const command = message.command;
@@ -181,9 +196,7 @@ function eventListern() {
         break;
       }
       case'filteredFinished':{
-        vscode.postMessage({
-          command: 'StartTesting'
-        });
+        //attivare bottone migloramento robustezza
         break;
       }
 
