@@ -1,11 +1,11 @@
 import {
   provideVSCodeDesignSystem, vsCodeButton, Button,
-  vsCodeDropdown, vsCodeOption, Dropdown, vsCodeProgressRing, vsCodeTextArea, ProgressRing, vsCodeCheckbox
+   vsCodeOption, vsCodeProgressRing, vsCodeTextArea, ProgressRing, vsCodeCheckbox
 } from "@vscode/webview-ui-toolkit";
 import { getUri } from "../utilities/getUri.js";
 
 
-provideVSCodeDesignSystem().register(vsCodeButton(), vsCodeDropdown(), vsCodeOption(), vsCodeProgressRing(), vsCodeCheckbox(), vsCodeTextArea());
+provideVSCodeDesignSystem().register(vsCodeButton(), vsCodeOption(), vsCodeProgressRing(), vsCodeCheckbox(), vsCodeTextArea());
 const vscode = acquireVsCodeApi();
 
 window.addEventListener('load', main);
@@ -191,8 +191,6 @@ function eventListern() {
   },
   );
 }
-
-
 sliderValue.addEventListener('input', function () {
   let value = parseFloat(sliderValue.value);
   value = Math.min(100, Math.max(0, value));
