@@ -1,45 +1,47 @@
-.options-container {
-  display: flex;
-  justify-content: flex-end;
-}
-.container {
-  position: relative;
-  width: 100%;
-  height: 100vh;
-}
-vscode-dropdown {
-  margin-bottom: 20px;
-  margin-right: 20px;
+/* general elements */
+
+h1 {
+  text-align: left;
+  font-weight: bold;
+  font-size: 24px;
+  color: white;
+  margin: 10px 0 20px 10px;
 }
 
-label {
-  margin-bottom: 4px;
-  margin-right: 10px;
-}
-.centered {
+vscode-checkbox {
   display: flex;
-  justify-content: center;
   align-items: center;
-  height: 100%;
+  margin-bottom: 5px;
 }
-.centered div {
-  text-align: center;
+
+vscode-checkbox input[type="checkbox"] {
+  margin-right: 5px;
 }
-.hidden {
-  display: none;
-}
-vscode-button {
-  margin-top: 20px;
-  margin-left: 20px;
-}
+
+/* id and class elements */
+
 .slider-container {
-  position: relative;
-  width: 150px;
+  display: flex;
+  align-items: center;
+  /* position: relative; */
+  width: 100%;
   margin: 10px;
+  margin-bottom: 20px;
+}
+
+input[type="number"] {
+  width: 40px;
+  text-align: left;
+  color: var(--vscode-button-background);
+  background-color: var(--vscode-editorWidget-background);
+  border: 1px solid var(--vscode-button-background);
+  position: relative;
+  
+  transform: translateX(-50%);
 }
 
 input[type="range"] {
-  width: 100%;
+  width: 80%;
   height: 5px;
   background-color: #313131;
   border: none;
@@ -56,23 +58,57 @@ input[type="range"]::-webkit-slider-thumb {
   position: relative;
 }
 
-input[type="number"] {
-  width: 40px;
-  text-align: center;
-  color: var(--vscode-button-background);
-  background-color: var(--vscode-editorWidget-background);
-  border: 1px solid var(--vscode-button-background);
-  position: absolute;
-  top: calc(100% + 5px);
-  left: 50%;
-  transform: translateX(-50%);
-}
-vscode-checkbox {
-  display: flex;
-  align-items: center;
-  margin-bottom: 5px;
+.slider-container label {
+  text-align:center;
+  margin-right: 30px;
 }
 
-vscode-checkbox input[type="checkbox"] {
-  margin-right: 5px;
+#start{
+  width: 100%;
+  margin-bottom: 30px;
+  margin-left: 10px;
+  align-self: center;
+}
+
+#container {
+  display: flex;
+  justify-content: space-between;
+}
+
+.left-container {
+  position: relative;
+  width: 50%;
+  
+}
+
+.centered {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.centered div {
+  text-align: center;
+}
+
+.right-container {
+  position: relative;
+  width: 50%;
+  padding: 0;
+  justify-content: center;
+}
+
+#insertedLabel{
+  position: relative;
+  align-content: end;
+}
+
+#insertedTextContent, #addSeed{
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.hidden {
+  display: none;
 }
