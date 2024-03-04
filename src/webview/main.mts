@@ -1,6 +1,6 @@
 import {
   provideVSCodeDesignSystem, vsCodeButton, Button,
-  vsCodeOption,vsCodeProgressRing, vsCodeTextArea, ProgressRing, vsCodeCheckbox
+  vsCodeOption, vsCodeProgressRing, vsCodeTextArea, ProgressRing, vsCodeCheckbox
 } from "@vscode/webview-ui-toolkit";
 import { getUri } from "../utilities/getUri.js";
 import { text } from "stream/consumers";
@@ -9,7 +9,8 @@ import { text } from "stream/consumers";
 provideVSCodeDesignSystem().register(vsCodeButton(), vsCodeOption(), vsCodeProgressRing(), vsCodeCheckbox(), vsCodeTextArea());
 const vscode = acquireVsCodeApi();
 let seeds = [];
-let supportSeeds=[];
+let supportSeeds = [];
+let count= true;
 
 window.addEventListener('load', main);
 window.addEventListener('load', eventListener);
@@ -24,10 +25,10 @@ async function main() {
   addSeed?.addEventListener('click', createInsertedCheckbox);
   input?.addEventListener('input', handleFileSelect);
   findFile();
-}
-document.getElementById('insertedTextContent').addEventListener('keydown', function(event) {
+  }
+document.getElementById('insertedTextContent').addEventListener('keydown', function (event) {
   if (event.key === 'Enter') {
-      event.preventDefault();
+    event.preventDefault();
   }
 });
 
@@ -42,7 +43,7 @@ function handleStartClick() {
     command: 'SliderValue',
     value: sliderValue.value
   });
- 
+
 }
 function progressRinghidden() {
   const progressRing = document.getElementById('progressRing');
@@ -53,7 +54,13 @@ function progressRinghidden() {
 
 
 function findFile() {
-  vscode.postMessage({ command: 'findFile' });
+  if(localStorage.getItem('seedsState')===null){
+    vscode.postMessage({ command: 'findFile' });
+    count= false;
+  }else{
+    restoreSeedsState();
+  }
+  
 }
 
 function setSamplesAndHideProgress(allSamples, progressRing) {
@@ -61,25 +68,26 @@ function setSamplesAndHideProgress(allSamples, progressRing) {
   const resetButton = document.getElementById('reset');
   const contentDiv = document.getElementById('content');
   const input = document.getElementById('fileInput');
-  
+
   progressRing.classList.add('hidden');
   startButton?.removeAttribute('disabled');
   createCheckbox(allSamples);
-  
+
   resetButton.removeAttribute('disabled');
   resetButton.addEventListener('click', () => {
     contentDiv.innerHTML = '';
+    localStorage.removeItem('seedsState');
     seeds = seeds.filter(seed => !supportSeeds.includes(seed));
     seeds = seeds.filter(seed => !allSamples.includes(seed));
     resetButton?.attributes.setNamedItem(document.createAttribute('disabled'));
     startButton?.attributes.setNamedItem(document.createAttribute('disabled'));
     input?.classList.remove('hidden');
   });
-  
+
 }
 
 function createCheckbox(allSamples) {
-seeds.push(...allSamples);
+  seeds.push(...allSamples);
   const contentDiv = document.getElementById('content');
   const label = document.createElement('label');
   label.textContent = "Seed sentences:\n";
@@ -115,14 +123,14 @@ seeds.push(...allSamples);
     });
 
     saveButton.addEventListener('click', () => {
-      if(textArea.value!==""){
-      const newValue = textArea.value;
-      checkbox.textContent = newValue;
-      seeds[index] = newValue;
-      supportSeeds.push(newValue);}
-      else
-      {
-        textArea.value=checkbox.textContent;
+      if (textArea.value !== "") {
+        const newValue = textArea.value;
+        checkbox.textContent = newValue;
+        seeds[index] = newValue;
+        supportSeeds.push(newValue);
+      }
+      else {
+        textArea.value = checkbox.textContent;
       }
       checkbox.classList.remove('hidden');
       editButton.classList.remove('hidden');
@@ -130,9 +138,9 @@ seeds.push(...allSamples);
       saveButton.classList.add('hidden');
     });
 
-    textArea.addEventListener('keydown', function(event) {
+    textArea.addEventListener('keydown', function (event) {
       if (event.key === 'Enter') {
-          event.preventDefault();
+        event.preventDefault();
       }
     });
     container.appendChild(checkbox);
@@ -146,10 +154,10 @@ seeds.push(...allSamples);
 
 
 
-function createInsertedCheckbox(){
+function createInsertedCheckbox() {
   const insertedDiv = document.getElementById('insertedContent');
   const insertedText = document.getElementById('insertedTextContent');
-  if(insertedText.value !== ''){
+  if (insertedText.value !== '') {
     const checkbox = document.createElement('vscode-checkbox');
     checkbox.setAttribute('checked', '');
     checkbox.textContent = insertedText.value;
@@ -208,7 +216,7 @@ function handleFileSelect() {
       if (allSamples.length === 0) {
         throw new Error("No seed found in JSON file");
       }
-      
+
       setSamplesAndHideProgress(allSamples, progressRing);
 
     } catch (error) {
@@ -238,6 +246,26 @@ function seedLoading(samples) {
     progressRinghidden();
   }
 }
+function saveSeedsState() {
+   const seedsState = {
+    seeds: seeds,
+    supportSeeds: supportSeeds
+  };
+  localStorage.setItem('seedsState', JSON.stringify(seedsState));
+}
+
+function restoreSeedsState() {
+  const savedState = localStorage.getItem('seedsState');
+  if (savedState) {
+    const { seeds: savedSeeds, supportSeeds: savedSupportSeeds } = JSON.parse(savedState);
+    if(savedSeeds!==null){
+    supportSeeds = savedSupportSeeds;
+    seedLoading(savedSeeds);}else{
+      findFile();
+    }
+  }
+  
+}
 
 function eventListener() {
   window.addEventListener('message', event => {
@@ -257,14 +285,26 @@ function eventListener() {
         postImplementatio('VUI-UPSET');
         break;
       }
-      case'filteredFinished':{
+      case 'filteredFinished': {
         const startButton = document.getElementById('start');
         startButton?.removeAttribute('disabled');
         //attivare bottone migloramento robustezza
         break;
       }
-
-
+      case 'webviewLostFocus':{
+        vscode.postMessage({
+          command: 'message',
+          text: "salvataggio avvio"
+      
+        });
+        saveSeedsState();
+        break;}
+      case 'webviewGainedFocus':{
+        vscode.postMessage({
+          command: 'message',
+          text: "caricamento avvio"
+        });
+        break;}
     }
   },
   );

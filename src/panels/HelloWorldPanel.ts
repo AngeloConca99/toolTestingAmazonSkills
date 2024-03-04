@@ -29,6 +29,7 @@ export class HelloWorldPanel {
     this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
     this._panel.webview.html = this._getWebviewContent(this._panel.webview, extensionUri);
     this._setWebviewMessageListener(this._panel.webview);
+    vscode.window.onDidChangeActiveTextEditor(this.handleActiveEditorChange, null, this._disposables);
   }
 
   public static render(extensionUri: vscode.Uri) {
@@ -45,6 +46,19 @@ export class HelloWorldPanel {
       HelloWorldPanel.currentPanel = new HelloWorldPanel(panel, extensionUri);
     }
   }
+  private handleActiveEditorChange = (editor: vscode.TextEditor | undefined) => {
+    if (!HelloWorldPanel.currentPanel) {
+      return;
+    }
+  
+    // Verifica se il pannello del webview è attualmente visibile
+    const isWebviewFocused = HelloWorldPanel.currentPanel._panel.visible;
+  
+    // Invia un messaggio appropriato al webview
+    HelloWorldPanel.currentPanel._panel.webview.postMessage({
+      command: isWebviewFocused ? 'webviewLostFocus' : 'webviewGainedFocus'
+    });
+  };
 
   public dispose() {
     HelloWorldPanel.currentPanel = undefined;
@@ -57,6 +71,7 @@ export class HelloWorldPanel {
         disposable.dispose();
       }
     }
+
   }
 
   private _getWebviewContent(webview: vscode.Webview, extensionUri: vscode.Uri) {
