@@ -91,6 +91,30 @@ input[type="range"]::-webkit-slider-thumb {
 .centered div {
   text-align: center;
 }
+.seed-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+}
+
+.vscode-text-area {
+  flex-grow: 1;
+ /* margin-right: 8px; /* Distanza tra l'area di testo e il pulsante Salva */
+}
+
+.edit-button {
+
+}
+.checkbox-container{
+  padding-right: 20px;
+}
+
+.save-button {
+  /* Stili per il pulsante Salva, se necessario */
+   /* Distanza tra l'area di testo e il pulsante */
+}
+
 
 .right-container {
   position: relative;

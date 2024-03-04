@@ -1,11 +1,12 @@
 // file: src/panels/HelloWorldPanel.ts
 
 
-import  {AlexaUtteranceTester} from'./../utilities/AlexaUtteranceTester';
+
 import { getUri } from "../utilities/getUri";
 import { getNonce } from "../utilities/getNonce";
 import { lstat } from "fs";
 import { quoteSpaces } from "../utilities/quoteSpaces";
+import  {AlexaUtteranceTester} from'./../utilities/AlexaUtteranceTester';
 import * as path from 'path';
 import * as childProcess from 'child_process';
 import * as fs from 'fs/promises';
@@ -90,7 +91,7 @@ export class HelloWorldPanel {
       const displayHtmlContent = fs.readFileSync(htmlPath, 'utf-8');
       return displayHtmlContent;
     } catch (error) {
-      throw new Error('Errore durante il recupero del contenuto HTML');
+      throw new Error("Error retrieving HTML content");
     }
   }
 
@@ -102,27 +103,29 @@ export class HelloWorldPanel {
       const cssUri = getUri(webview, extensionUri, ["out", cssDefault]);
       return cssUri;
     } catch (error) {
-      throw new Error('Errore durante il recupero del contenuto Css');
+      throw new Error("Error retrieving CSS content");
     }
   }
 
   private CreateTxtFile(text: string, webview: vscode.Webview) {
+    
     try {
       const workspaceFolders = vscode.workspace.workspaceFolders;
       if (!workspaceFolders || workspaceFolders.length === 0) {
-        vscode.window.showErrorMessage('Nessuna cartella di lavoro trovata.');
+        vscode.window.showErrorMessage("Workspace folder not found");
         return;
       }
 
       const workspaceFolder = workspaceFolders[0];
       this.workspaceTmpPath = path.join(workspaceFolder.uri.fsPath, 'tmp');
+      this.outputPath = path.join(this.workspaceTmpPath, 'output');
       const folderPath = this.workspaceTmpPath;
       const fileName = 'input.txt';
       this.TextFilePath = path.join(this.workspaceTmpPath, fileName);
       this.outputPath = path.join(this.workspaceTmpPath, 'output');
       this.saveFileInFolder(text, folderPath, fileName, webview);
     } catch (error) {
-      vscode.window.showErrorMessage('Errore durante la creazione del file: ' + error);
+      vscode.window.showErrorMessage("Error in file creation: " + error.message);
     }
   }
 
@@ -131,10 +134,10 @@ export class HelloWorldPanel {
     const contentBuffer = Buffer.from(content, 'utf8');
     try {
       vscode.workspace.fs.writeFile(fullPath, contentBuffer);
-      vscode.window.showInformationMessage('File salvato con successo.');
+      vscode.window.showInformationMessage("File successfully saved");
       webview.postMessage({ command: 'SavedFile' });
      } catch (error) {
-      vscode.window.showErrorMessage('Si è verificato un errore durante il salvataggio del file: ' + error);
+      vscode.window.showErrorMessage("An error occurred shile saving the file: " + error.message);
     }
    }
   private async filteredGenerated(): Promise<void> {
@@ -162,7 +165,7 @@ export class HelloWorldPanel {
             await fs.rm(outputFolderPath, { recursive: true });
       
     } catch (error) {
-        vscode.window.showErrorMessage('Errore durante la filtrazione e la gestione dei dati:', error);
+        vscode.window.showErrorMessage("An error occurred during file management: " + error.message);
     }
     
 }
@@ -170,22 +173,26 @@ export class HelloWorldPanel {
   private runScript(command: string,webview: vscode.Webview) {
     try {
         if (!this.workspaceTmpPath) {
-            vscode.window.showErrorMessage("La cartella temporanea non è stata trovata.");
+            vscode.window.showErrorMessage("Temporary folder not found");
             return;
         }
 
+        this.outputPath = path.join(this.workspaceTmpPath, 'output');
+
         childProcess.exec(command, async (error, stdout, stderr) => {
             if (error) {
-                vscode.window.showErrorMessage("Errore durante l'esecuzione dello script: " + error.message);
+                vscode.window.showErrorMessage("Error while executing the script: " + error.message);
                 return;
             }
-            vscode.window.showInformationMessage("Lo script è stato eseguito correttamente. Output salvato in: " + this.outputPath);
+            vscode.window.showInformationMessage("Script successfully executed. Output saved in " + this.outputPath);
             
            await this.filteredGenerated();
+
            webview.postMessage({ command: 'filteredFinished' });
+           vscode.commands.executeCommand('vscode.open', vscode.Uri.file(this.outputPath + ".json"), { preview: false, viewColumn: vscode.ViewColumn.One });
         });
     } catch (error) {
-        vscode.window.showErrorMessage("Errore durante l'esecuzione dello script: " + error.message);
+        vscode.window.showErrorMessage("Error while executing the script: " + error.message);
     }
 }
 
@@ -210,25 +217,24 @@ export class HelloWorldPanel {
     try {
       const jsonFiles = await this.findFilesWithTimeout('**/skill-package/interactionModels/custom/en-US.json', '**/node_modules/**', 1, this.timeoutMillis);
       let allSamples = [];
-
-      for (const jsonFileUri of jsonFiles) {
+      
         const jsonFileContent = await vscode.workspace.fs.readFile(jsonFileUri);
         const jsonString = new TextDecoder().decode(jsonFileContent);
         const fileJsonObject = JSON.parse(jsonString);
+        this.invocationName =fileJsonObject.interactionModel.languageModel.invocationName;
+        
         
 
         if (fileJsonObject && fileJsonObject.interactionModel && fileJsonObject.interactionModel.languageModel && fileJsonObject.interactionModel.languageModel.intents) {
-           this.invocationName =fileJsonObject.interactionModel.languageModel.invocationName;
             fileJsonObject.interactionModel.languageModel.intents.forEach(intent => {
             if (Array.isArray(intent.samples) && intent.samples.length > 0) {
               allSamples.push(...intent.samples);
             }
           });
-          console.log(`Il nome della skill è: ${this.invocationName}`);
         } else {
           throw new Error("Invalid or missing JSON file structure");
         }
-      }
+      
 
       if (allSamples.length === 0) {
         throw new Error("No seeds found in JSON file intents.");
@@ -236,13 +242,13 @@ export class HelloWorldPanel {
         webview.postMessage({ command: 'JsonFile', samples: allSamples });
       }
     } catch (error) {
-      vscode.window.showErrorMessage("error loading file: " + error);
+      vscode.window.showErrorMessage("Error loading file: " + error.message);
       webview.postMessage({ command: 'JsonFileNotFound' });
     }
 
   }
 
-  private async startUtteranceTesting() {
+  private async startUtteranceTesting(webview: vscode.Webview) {
     try {
       if (!this.invocationName) {
         vscode.window.showErrorMessage("Nome dell'invocazione non specificato.");
@@ -255,11 +261,12 @@ export class HelloWorldPanel {
     } catch (error) {
       vscode.window.showErrorMessage(`Errore durante il test delle utterances: ${error}`);
     }
+    webview.postMessage({command:'TestingFinished'})
   }
   
 
   private _setWebviewMessageListener(webview: vscode.Webview) {
-    let absoluteScriptPath;
+    let absoluteScriptPath = path.join(__dirname, '/implementations/VUI-UPSET.jar');
     webview.onDidReceiveMessage(
       async (message: any) => {
         const command = message.command;
@@ -282,16 +289,13 @@ export class HelloWorldPanel {
             this.CreateTxtFile(text, webview);
             break;
           case 'VUI-UPSET':
-            absoluteScriptPath = path.join(__dirname, '/implementations/VUI-UPSET.jar');
             this.runScript(`java -jar ${quoteSpaces(absoluteScriptPath)} ${quoteSpaces(this.TextFilePath)} ${quoteSpaces(this.outputPath)}`,webview);
             break;
-          case 'SkillName':
-            this.invocationName=text;
+            case'TestingStarted':
+            this.startUtteranceTesting(webview);
             break;
-            case'StartTesting':
-          this.startUtteranceTesting();
-          break;
-
+            case'SkillName':
+            this.invocationName= message.text;
         }
       },
       undefined,

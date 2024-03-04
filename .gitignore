@@ -4,3 +4,4 @@ node_modules
 implementations
 .vscode-test/
 *.vsix
+en-US.json

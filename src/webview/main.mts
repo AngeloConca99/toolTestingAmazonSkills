@@ -1,38 +1,47 @@
 import {
   provideVSCodeDesignSystem, vsCodeButton, Button,
-   vsCodeOption, vsCodeProgressRing, vsCodeTextArea, ProgressRing, vsCodeCheckbox
+  vsCodeOption, vsCodeProgressRing, vsCodeTextArea, ProgressRing, vsCodeCheckbox
 } from "@vscode/webview-ui-toolkit";
 import { getUri } from "../utilities/getUri.js";
+import { text } from "stream/consumers";
 
 
 provideVSCodeDesignSystem().register(vsCodeButton(), vsCodeOption(), vsCodeProgressRing(), vsCodeCheckbox(), vsCodeTextArea());
 const vscode = acquireVsCodeApi();
+let seeds = [];
+let supportSeeds = [];
 
 window.addEventListener('load', main);
-window.addEventListener('load', eventListern);
+window.addEventListener('load', eventListener);
 
 async function main() {
-  let selection = 1;
   const input = document.getElementById('fileInput') as InputFile;
   const slider = document.getElementById('slider') as Slider;
   const sliderValue = document.getElementById('sliderValue') as slidevalue;
   const startButton = document.getElementById('start') as Button;
+  const addSeed = document.getElementById('addSeed') as Button;
   startButton?.addEventListener('click', handleStartClick);
-  input?.addEventListener('change', handleFileSelect);
+  addSeed?.addEventListener('click', createInsertedCheckbox);
+  input?.addEventListener('input', handleFileSelect);
   findFile();
 }
+document.getElementById('insertedTextContent').addEventListener('keydown', function (event) {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+  }
+});
 
 function handleStartClick() {
-  const textArea = document.getElementById('textContent');
+  const startButton = document.getElementById('start');
+  startButton?.attributes.setNamedItem(document.createAttribute('disabled'));
   vscode.postMessage({
     command: 'createTxtFile',
-    text: textArea.value
+    text: seeds.join('\n')
   });
   vscode.postMessage({
     command: 'SliderValue',
     value: sliderValue.value
   });
-
 
 }
 function progressRinghidden() {
@@ -47,45 +56,119 @@ function findFile() {
   vscode.postMessage({ command: 'findFile' });
 }
 
-function setSamplesAndHideProgress(allSamples, textArea, progressRing) {
+function setSamplesAndHideProgress(allSamples, progressRing) {
   const startButton = document.getElementById('start');
-  //const samplesText = allSamples.join('\n');
-  //textArea.value = samplesText;
-  progressRing.classList.add('hidden');
-  //textArea.classList.remove('hidden');
-  startButton?.removeAttribute('disabled');
-  provachekbox(allSamples);
-}
-function provachekbox(allSamples) {
-  const textArea = document.getElementById('textContent');
-  let seeds = allSamples.slice();
+  const resetButton = document.getElementById('reset');
   const contentDiv = document.getElementById('content');
+  const input = document.getElementById('fileInput');
+
+  progressRing.classList.add('hidden');
+  startButton?.removeAttribute('disabled');
+  createCheckbox(allSamples);
+
+  resetButton.removeAttribute('disabled');
+  resetButton.addEventListener('click', () => {
+    contentDiv.innerHTML = '';
+    seeds = seeds.filter(seed => !supportSeeds.includes(seed));
+    seeds = seeds.filter(seed => !allSamples.includes(seed));
+    resetButton?.attributes.setNamedItem(document.createAttribute('disabled'));
+    startButton?.attributes.setNamedItem(document.createAttribute('disabled'));
+    input?.classList.remove('hidden');
+  });
+
+}
+
+function createCheckbox(allSamples) {
+  seeds.push(...allSamples);
+  const contentDiv = document.getElementById('content');
+  const label = document.createElement('label');
+  label.textContent = "Seed sentences:\n";
+  contentDiv.appendChild(label);
 
   seeds.forEach((seed, index) => {
+    const container = document.createElement('div');
+    container.classList.add('seed-container'); // Classe per lo stile del container
+
     const checkbox = document.createElement('vscode-checkbox');
     checkbox.setAttribute('checked', '');
     checkbox.textContent = seed;
+    checkbox.classList.add('checkbox-container');
+
+    const textArea = document.createElement('vscode-text-area');
+    textArea.value = seed;
+    textArea.classList.add('hidden');
+    textArea.classList.add('vscode-text-area');
+
+    const editButton = document.createElement('vscode-button');
+    editButton.textContent = 'Modifica';
+    editButton.classList.add('edit-button');
+
+    const saveButton = document.createElement('vscode-button');
+    saveButton.textContent = 'Salva';
+    saveButton.classList.add('hidden', 'save-button');
+
+    editButton.addEventListener('click', () => {
+      checkbox.classList.add('hidden');
+      editButton.classList.add('hidden');
+      textArea.classList.remove('hidden');
+      saveButton.classList.remove('hidden');
+    });
+
+    saveButton.addEventListener('click', () => {
+      if (textArea.value !== "") {
+        const newValue = textArea.value;
+        checkbox.textContent = newValue;
+        seeds[index] = newValue;
+        supportSeeds.push(newValue);
+      }
+      else {
+        textArea.value = checkbox.textContent;
+      }
+      checkbox.classList.remove('hidden');
+      editButton.classList.remove('hidden');
+      textArea.classList.add('hidden');
+      saveButton.classList.add('hidden');
+    });
+
+    textArea.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+      }
+    });
+    container.appendChild(checkbox);
+    container.appendChild(textArea);
+    container.appendChild(saveButton);
+    contentDiv.appendChild(container);
+    contentDiv.appendChild(editButton);
+  });
+}
+
+
+
+
+function createInsertedCheckbox() {
+  const insertedDiv = document.getElementById('insertedContent');
+  const insertedText = document.getElementById('insertedTextContent');
+  if (insertedText.value !== '') {
+    const checkbox = document.createElement('vscode-checkbox');
+    checkbox.setAttribute('checked', '');
+    checkbox.textContent = insertedText.value;
+    seeds.push(checkbox.textContent);
+    insertedText.value = '';
     checkbox.addEventListener('click', () => {
       if (checkbox.hasAttribute('checked')) {
-        seeds.splice(seeds.indexOf(seed), 1);
+        seeds.splice(seeds.indexOf(checkbox.textContent), 1);
       } else {
-        seeds.push(seed);
+        seeds.push(checkbox.textContent);
       }
-      updateTextarea(seeds, textArea);
     });
-    contentDiv.appendChild(checkbox);
-  });
-  textArea.value = seeds.join('\n');
-  //textArea.classList.remove('hidden'); //eliminare il commento se si verificano problemi nella creazione del file
-}
-
-function updateTextarea(seeds, textArea) {
-  textArea.value = seeds.join('\n');
+    insertedDiv.appendChild(checkbox);
+  }
 }
 
 
-function postImplementatio(implementation: string) {
-  
+function postCommand(implementation: string) {
+
   vscode.postMessage({
     command: implementation,
   });
@@ -93,7 +176,6 @@ function postImplementatio(implementation: string) {
 
 
 function handleFileSelect() {
-  const textArea = document.getElementById('textContent');
   const input = document.getElementById('fileInput');
   const progressRing = document.getElementById('progressRing');
 
@@ -118,22 +200,22 @@ function handleFileSelect() {
       if (!json || !json.interactionModel || !json.interactionModel.languageModel || !json.interactionModel.languageModel.intents) {
         throw new Error("Invalid JSON file structure");
       }
+      vscode.postMessage({
+        command:'SkillName',
+        text:json.interactionModel.languageModel.invocationName
 
+      });
+      
       json.interactionModel.languageModel.intents.forEach(intent => {
         if (Array.isArray(intent.samples) && intent.samples.length > 0) {
           allSamples.push(...intent.samples);
         }
       });
-      const invocationName = json.interactionModel.languageModel.invocationName;
-      vscode.postMessage({
-        command: 'SkillName',
-        text: invocationName
-      });
-
       if (allSamples.length === 0) {
         throw new Error("No seed found in JSON file");
       }
-      setSamplesAndHideProgress(allSamples, textArea, progressRing);
+
+      setSamplesAndHideProgress(allSamples, progressRing);
 
     } catch (error) {
       vscode.postMessage({
@@ -142,26 +224,28 @@ function handleFileSelect() {
       });
       progressRinghidden();
     }
+
+    input.value = '';
   };
 
   reader.readAsText(file);
 }
+
 function seedLoading(samples) {
   const input = document.getElementById('fileInput');
   try {
     const progressRing = document.getElementById('progressRing');
-    const textArea = document.getElementById('textContent');
-    setSamplesAndHideProgress(samples, textArea, progressRing);
+    setSamplesAndHideProgress(samples, progressRing);
   } catch (error) {
     vscode.postMessage({
       command: 'errorMessage',
-      text: "error while loading " + error.message
+      text: error.message
     });
     progressRinghidden();
   }
 }
 
-function eventListern() {
+function eventListener() {
   window.addEventListener('message', event => {
     const message = event.data;
     const command = message.command;
@@ -176,18 +260,19 @@ function eventListern() {
       }
         break;
       case 'SavedFile': {
-        postImplementatio('VUI-UPSET');
-      break;
-      }
-      case'filteredFinished':{
-        vscode.postMessage({
-          command: 'StartTesting'
-        });
+        postCommand('VUI-UPSET');
         break;
       }
-
-
-    }
+      case 'filteredFinished': {
+        postCommand("TestingStarted");
+        break;
+      }
+      case 'TestingFinished': {
+        const startButton = document.getElementById('start');
+        startButton?.removeAttribute('disabled');
+        break;
+      }
+   }
   },
   );
 }
