@@ -116,8 +116,11 @@ function createCheckbox(allSamples) {
       if(textArea.value!==""){
       const newValue = textArea.value;
       checkbox.textContent = newValue;
-      seeds[index] = newValue;
-    }
+      seeds[index] = newValue;}
+      else
+      {
+        textArea.value=checkbox.textContent;
+      }
       checkbox.classList.remove('hidden');
       editButton.classList.remove('hidden');
       textArea.classList.add('hidden');
