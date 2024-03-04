@@ -247,9 +247,7 @@ export class HelloWorldPanel {
   
 
   private _setWebviewMessageListener(webview: vscode.Webview) {
-    let absoluteScriptPath;
-    absoluteScriptPath = path.join(__dirname, '/implementations/VUI-UPSET.jar');
-    quoteSpaces(absoluteScriptPath);
+    let absoluteScriptPath = path.join(__dirname, '/implementations/VUI-UPSET.jar');
     webview.onDidReceiveMessage(
       async (message: any) => {
         const command = message.command;
@@ -272,16 +270,10 @@ export class HelloWorldPanel {
             this.CreateTxtFile(text, webview);
             break;
           case 'VUI-UPSET':
-            quoteSpaces(this.TextFilePath);
-            quoteSpaces(this.outputPath);
-            absoluteScriptPath= absoluteScriptPath+" "+this.TextFilePath+" "+this.outputPath;
-            this.runScript(`java -jar ${absoluteScriptPath}`,webview);
+            this.runScript(`java -jar ${quoteSpaces(absoluteScriptPath)} ${quoteSpaces(this.TextFilePath)} ${quoteSpaces(this.outputPath)}`,webview);
             break;
-            console.log(this.outputPath + ".json");
-            
             //apri il file;
             break;
-
         }
       },
       undefined,

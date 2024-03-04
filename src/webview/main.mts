@@ -8,6 +8,7 @@ import { text } from "stream/consumers";
 
 provideVSCodeDesignSystem().register(vsCodeButton(), vsCodeOption(), vsCodeProgressRing(), vsCodeCheckbox(), vsCodeTextArea());
 const vscode = acquireVsCodeApi();
+let seeds = [];
 
 window.addEventListener('load', main);
 window.addEventListener('load', eventListener);
@@ -30,11 +31,9 @@ document.getElementById('insertedTextContent').addEventListener('keydown', funct
 });
 
 function handleStartClick() {
-  let textArea = document.getElementById('textContent');
-  // sostituire la textArea con la stringa di samples;
   vscode.postMessage({
     command: 'createTxtFile',
-    text: textArea.value
+    text: seeds.join('\n')
   });
   vscode.postMessage({
     command: 'SliderValue',
@@ -55,21 +54,19 @@ function findFile() {
   vscode.postMessage({ command: 'findFile' });
 }
 
-function setSamplesAndHideProgress(allSamples, textArea, progressRing) {
+function setSamplesAndHideProgress(allSamples, progressRing) {
   const startButton = document.getElementById('start');
-  //const samplesText = allSamples.join('\n');
-  //textArea.value = samplesText;
   progressRing.classList.add('hidden');
-  //textArea.classList.remove('hidden');
   startButton?.removeAttribute('disabled');
   createCheckbox(allSamples);
 }
 
 function createCheckbox(allSamples) {
-  const textArea = document.getElementById('textContent');
-  let seeds = allSamples.slice();
+  seeds.push(...allSamples);
   const contentDiv = document.getElementById('content');
-
+  const label = document.createElement('label');
+  label.textContent="Seed sentences:\n";
+  contentDiv.appendChild(label);
   seeds.forEach((seed) => {
     const checkbox = document.createElement('vscode-checkbox');
     checkbox.setAttribute('checked', '');
@@ -80,28 +77,29 @@ function createCheckbox(allSamples) {
       } else {
         seeds.push(seed);
       }
-      updateTextarea(seeds, textArea);
     });
     contentDiv.appendChild(checkbox);
   });
-  textArea.value = seeds.join('\n');
-  //textArea.classList.remove('hidden'); //eliminare il commento se si verificano problemi nella creazione del file
 }
 
 function createInsertedCheckbox(){
-  const insertedText = document.getElementById('insertedTextContent');
-  const checkbox = document.createElement('vscode-checkbox');
   const insertedDiv = document.getElementById('insertedContent');
-  checkbox.setAttribute('checked', '');
-  if(this.insertedText.value !== ''){
+  const insertedText = document.getElementById('insertedTextContent');
+  if(insertedText.value !== ''){
+    const checkbox = document.createElement('vscode-checkbox');
+    checkbox.setAttribute('checked', '');
     checkbox.textContent = insertedText.value;
+    seeds.push(checkbox.textContent);
     insertedText.value = '';
+    checkbox.addEventListener('click', () => {
+      if (checkbox.hasAttribute('checked')) {
+        seeds.splice(seeds.indexOf(checkbox.textContent), 1);
+      } else {
+        seeds.push(checkbox.textContent);
+      }
+    });
     insertedDiv.appendChild(checkbox);
   }
-}
-
-function updateTextarea(seeds, textArea) {
-  textArea.value = seeds.join('\n');
 }
 
 
@@ -113,7 +111,6 @@ function postImplementatio(implementation: string) {
 
 
 function handleFileSelect() {
-  const textArea = document.getElementById('textContent');
   const input = document.getElementById('fileInput');
   const progressRing = document.getElementById('progressRing');
 
@@ -147,7 +144,7 @@ function handleFileSelect() {
       if (allSamples.length === 0) {
         throw new Error("No seed found in JSON file");
       }
-      setSamplesAndHideProgress(allSamples, textArea, progressRing);
+      setSamplesAndHideProgress(allSamples, progressRing);
 
     } catch (error) {
       vscode.postMessage({
@@ -165,8 +162,7 @@ function seedLoading(samples) {
   const input = document.getElementById('fileInput');
   try {
     const progressRing = document.getElementById('progressRing');
-    const textArea = document.getElementById('textContent');
-    setSamplesAndHideProgress(samples, textArea, progressRing);
+    setSamplesAndHideProgress(samples, progressRing);
   } catch (error) {
     vscode.postMessage({
       command: 'errorMessage',
