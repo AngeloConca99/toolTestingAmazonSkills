@@ -130,7 +130,11 @@ seeds.push(...allSamples);
       saveButton.classList.add('hidden');
     });
 
-    // Aggiungi l'area di testo e il pulsante Salva al container principale
+    textArea.addEventListener('keydown', function(event) {
+      if (event.key === 'Enter') {
+          event.preventDefault();
+      }
+    });
     container.appendChild(checkbox);
     container.appendChild(textArea);
     container.appendChild(saveButton);
