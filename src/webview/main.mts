@@ -1,18 +1,17 @@
 import {
   provideVSCodeDesignSystem, vsCodeButton, Button,
-  vsCodeDropdown, vsCodeOption, Dropdown, vsCodeProgressRing, vsCodeTextArea, ProgressRing, vsCodeCheckbox
+  vsCodeOption,vsCodeProgressRing, vsCodeTextArea, ProgressRing, vsCodeCheckbox
 } from "@vscode/webview-ui-toolkit";
 import { getUri } from "../utilities/getUri.js";
 
 
-provideVSCodeDesignSystem().register(vsCodeButton(), vsCodeDropdown(), vsCodeOption(), vsCodeProgressRing(), vsCodeCheckbox(), vsCodeTextArea());
+provideVSCodeDesignSystem().register(vsCodeButton(), vsCodeOption(), vsCodeProgressRing(), vsCodeCheckbox(), vsCodeTextArea());
 const vscode = acquireVsCodeApi();
 
 window.addEventListener('load', main);
-window.addEventListener('load', eventListern);
+window.addEventListener('load', messageListener);
 
 async function main() {
-  let selection = 1;
   const input = document.getElementById('fileInput') as InputFile;
   const slider = document.getElementById('slider') as Slider;
   const sliderValue = document.getElementById('sliderValue') as slidevalue;
@@ -55,9 +54,9 @@ function setSamplesAndHideProgress(allSamples, textArea, progressRing) {
   progressRing.classList.add('hidden');
   //textArea.classList.remove('hidden');
   startButton?.removeAttribute('disabled');
-  provachekbox(allSamples);
+  generatedCheckboxes(allSamples);
 }
-function provachekbox(allSamples) {
+function generatedCheckboxes(allSamples) {
   const textArea = document.getElementById('textContent');
   let seeds = allSamples.slice();
   const contentDiv = document.getElementById('content');
@@ -91,27 +90,6 @@ function postImplementatio(implementation: string) {
   });
 }
 
-function chosenimplementation() {
-  const selectedOption = (document.getElementById('dropdown') as Dropdown).value;
-  let selection;
-  switch (selectedOption) {
-    case 'option1': {
-      postImplementatio('VUI-UPSET');
-
-    }
-      break;
-    case 'option2': {
-      postImplementatio('GRSBV');
-
-    } break;
-    case 'option3': {
-      postImplementatio('ChatGpt');
-    }
-      break;
-    default:
-      postImplementatio('ChatGpt');
-  }
-}
 
 function handleFileSelect() {
   const textArea = document.getElementById('textContent');
@@ -145,12 +123,6 @@ function handleFileSelect() {
           allSamples.push(...intent.samples);
         }
       });
-      const invocationName = json.interactionModel.languageModel.invocationName;
-      vscode.postMessage({
-        command: 'SkillName',
-        text: invocationName
-      });
-
       if (allSamples.length === 0) {
         throw new Error("No seed found in JSON file");
       }
@@ -182,7 +154,7 @@ function seedLoading(samples) {
   }
 }
 
-function eventListern() {
+function messageListener() {
   window.addEventListener('message', event => {
     const message = event.data;
     const command = message.command;
@@ -197,14 +169,8 @@ function eventListern() {
       }
         break;
       case 'SavedFile': {
-        chosenimplementation();
-        break;
-      }
-      case'filteredFinished':{
-        vscode.postMessage({
-          command: 'StartTesting'
-        });
-        break;
+        postImplementatio('VUI-UPSET');
+      break;
       }
 
 

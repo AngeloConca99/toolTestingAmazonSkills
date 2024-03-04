@@ -116,6 +116,7 @@ export class HelloWorldPanel {
 
       const workspaceFolder = workspaceFolders[0];
       this.workspaceTmpPath = path.join(workspaceFolder.uri.fsPath, 'tmp');
+      this.outputPath = path.join(this.workspaceTmpPath, 'output');
       const folderPath = this.workspaceTmpPath;
       const fileName = 'input.txt';
       this.TextFilePath = path.join(this.workspaceTmpPath, fileName);
@@ -173,7 +174,7 @@ export class HelloWorldPanel {
             return;
         }
 
-        this.outputPath = path.join(this.workspaceTmpPath, 'output');
+      
 
         childProcess.exec(command, async (error, stdout, stderr) => {
             if (error) {
@@ -220,13 +221,11 @@ export class HelloWorldPanel {
         
 
         if (fileJsonObject && fileJsonObject.interactionModel && fileJsonObject.interactionModel.languageModel && fileJsonObject.interactionModel.languageModel.intents) {
-           this.invocationName =fileJsonObject.interactionModel.languageModel.invocationName;
             fileJsonObject.interactionModel.languageModel.intents.forEach(intent => {
             if (Array.isArray(intent.samples) && intent.samples.length > 0) {
               allSamples.push(...intent.samples);
             }
           });
-          console.log(`Il nome della skill è: ${this.invocationName}`);
         } else {
           throw new Error("Invalid or missing JSON file structure");
         }
@@ -242,22 +241,6 @@ export class HelloWorldPanel {
       webview.postMessage({ command: 'JsonFileNotFound' });
     }
 
-  }
-
-  private async startUtteranceTesting() {
-    try {
-      if (!this.invocationName) {
-        vscode.window.showErrorMessage("Nome dell'invocazione non specificato.");
-        return;
-      }
-      const filePath=path.join(this.workspaceTmpPath, 'output.json');
-  
-      const utteranceTester = new AlexaUtteranceTester(filePath,this.invocationName);
-      await utteranceTester.runSimulations();
-      vscode.window.showInformationMessage("Test delle utterances completato con successo.");
-    } catch (error) {
-      vscode.window.showErrorMessage(`Errore durante il test delle utterances: ${error}`);
-    }
   }
   
 
@@ -288,12 +271,6 @@ export class HelloWorldPanel {
             absoluteScriptPath = path.join(__dirname, '/implementations/VUI-UPSET.jar');
             this.runScript(`java -jar ${quoteSpaces(absoluteScriptPath)} ${quoteSpaces(this.TextFilePath)} ${quoteSpaces(this.outputPath)}`,webview);
             break;
-          case 'SkillName':
-            this.invocationName=text;
-            break;
-            case'StartTesting':
-          this.startUtteranceTesting();
-          break;
 
         }
       },
