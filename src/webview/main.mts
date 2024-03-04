@@ -24,6 +24,11 @@ async function main() {
   input?.addEventListener('input', handleFileSelect);
   findFile();
 }
+document.getElementById('insertedTextContent').addEventListener('keydown', function(event) {
+  if (event.key === 'Enter') {
+      event.preventDefault();
+  }
+});
 
 function handleStartClick() {
   vscode.postMessage({
@@ -75,23 +80,61 @@ function createCheckbox(allSamples) {
   seeds.push(...allSamples);
   const contentDiv = document.getElementById('content');
   const label = document.createElement('label');
-  label.textContent="Seed sentences:\n";
+  label.textContent = "Seed sentences:\n";
   contentDiv.appendChild(label);
-  seeds.forEach((seed) => {
+
+  seeds.forEach((seed, index) => {
+    const container = document.createElement('div');
+    container.classList.add('seed-container'); // Classe per lo stile del container
+
     const checkbox = document.createElement('vscode-checkbox');
     checkbox.setAttribute('checked', '');
     checkbox.textContent = seed;
-    checkbox.addEventListener('click', () => {
-      if (checkbox.hasAttribute('checked')) {
-        seeds.splice(seeds.indexOf(seed), 1);
-      } else {
-        seeds.push(seed);
-      }
+    checkbox.classList.add('checkbox-container');
+
+    const textArea = document.createElement('vscode-text-area');
+    textArea.value = seed;
+    textArea.classList.add('hidden');
+    textArea.classList.add('vscode-text-area');
+
+    const editButton = document.createElement('vscode-button');
+    editButton.textContent = 'Modifica';
+    editButton.classList.add('edit-button');
+
+    const saveButton = document.createElement('vscode-button');
+    saveButton.textContent = 'Salva';
+    saveButton.classList.add('hidden', 'save-button');
+
+    editButton.addEventListener('click', () => {
+      checkbox.classList.add('hidden');
+      editButton.classList.add('hidden');
+      textArea.classList.remove('hidden');
+      saveButton.classList.remove('hidden');
     });
-    contentDiv.appendChild(checkbox);
-    
+
+    saveButton.addEventListener('click', () => {
+      if(textArea.value!==""){
+      const newValue = textArea.value;
+      checkbox.textContent = newValue;
+      seeds[index] = newValue;
+    }
+      checkbox.classList.remove('hidden');
+      editButton.classList.remove('hidden');
+      textArea.classList.add('hidden');
+      saveButton.classList.add('hidden');
+    });
+
+    // Aggiungi l'area di testo e il pulsante Salva al container principale
+    container.appendChild(checkbox);
+    container.appendChild(textArea);
+    container.appendChild(saveButton);
+    contentDiv.appendChild(container);
+    contentDiv.appendChild(editButton);
   });
 }
+
+
+
 
 function createInsertedCheckbox(){
   const insertedDiv = document.getElementById('insertedContent');
@@ -226,3 +269,4 @@ sliderValue.addEventListener('input', function () {
 slider.addEventListener('input', function () {
   sliderValue.value = slider.value;
 });
+
