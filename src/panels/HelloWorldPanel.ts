@@ -261,7 +261,7 @@ export class HelloWorldPanel {
     } catch (error) {
       vscode.window.showErrorMessage(`Errore durante il test delle utterances: ${error}`);
     }
-    webview.postMessage({command:'TestingFinished'})
+    webview.postMessage({command:'TestingFinished'});
   }
   
 
