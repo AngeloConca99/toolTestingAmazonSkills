@@ -296,6 +296,7 @@ export class HelloWorldPanel {
             break;
             case'SkillName':
             this.invocationName= message.text;
+            break;
         }
       },
       undefined,
