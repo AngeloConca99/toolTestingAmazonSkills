@@ -23,6 +23,11 @@ async function main() {
   input?.addEventListener('change', handleFileSelect);
   findFile();
 }
+document.getElementById('insertedTextContent').addEventListener('keydown', function(event) {
+  if (event.key === 'Enter') {
+      event.preventDefault();
+  }
+});
 
 function handleStartClick() {
   let textArea = document.getElementById('textContent');
@@ -211,3 +216,4 @@ sliderValue.addEventListener('input', function () {
 slider.addEventListener('input', function () {
   sliderValue.value = slider.value;
 });
+
