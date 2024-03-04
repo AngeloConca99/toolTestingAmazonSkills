@@ -9,6 +9,7 @@ import { text } from "stream/consumers";
 provideVSCodeDesignSystem().register(vsCodeButton(), vsCodeOption(), vsCodeProgressRing(), vsCodeCheckbox(), vsCodeTextArea());
 const vscode = acquireVsCodeApi();
 let seeds = [];
+let supportSeeds=[];
 
 window.addEventListener('load', main);
 window.addEventListener('load', eventListener);
@@ -31,6 +32,8 @@ document.getElementById('insertedTextContent').addEventListener('keydown', funct
 });
 
 function handleStartClick() {
+  const startButton = document.getElementById('start');
+  startButton?.attributes.setNamedItem(document.createAttribute('disabled'));
   vscode.postMessage({
     command: 'createTxtFile',
     text: seeds.join('\n')
@@ -39,8 +42,7 @@ function handleStartClick() {
     command: 'SliderValue',
     value: sliderValue.value
   });
-
-
+ 
 }
 function progressRinghidden() {
   const progressRing = document.getElementById('progressRing');
@@ -67,6 +69,7 @@ function setSamplesAndHideProgress(allSamples, progressRing) {
   resetButton.removeAttribute('disabled');
   resetButton.addEventListener('click', () => {
     contentDiv.innerHTML = '';
+    seeds = seeds.filter(seed => !supportSeeds.includes(seed));
     seeds = seeds.filter(seed => !allSamples.includes(seed));
     resetButton?.attributes.setNamedItem(document.createAttribute('disabled'));
     startButton?.attributes.setNamedItem(document.createAttribute('disabled'));
@@ -76,8 +79,7 @@ function setSamplesAndHideProgress(allSamples, progressRing) {
 }
 
 function createCheckbox(allSamples) {
-
-  seeds.push(...allSamples);
+seeds.push(...allSamples);
   const contentDiv = document.getElementById('content');
   const label = document.createElement('label');
   label.textContent = "Seed sentences:\n";
@@ -116,7 +118,8 @@ function createCheckbox(allSamples) {
       if(textArea.value!==""){
       const newValue = textArea.value;
       checkbox.textContent = newValue;
-      seeds[index] = newValue;}
+      seeds[index] = newValue;
+      supportSeeds.push(newValue);}
       else
       {
         textArea.value=checkbox.textContent;
@@ -251,6 +254,8 @@ function eventListener() {
         break;
       }
       case'filteredFinished':{
+        const startButton = document.getElementById('start');
+        startButton?.removeAttribute('disabled');
         //attivare bottone migloramento robustezza
         break;
       }
