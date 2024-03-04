@@ -21,7 +21,7 @@ async function main() {
   const addSeed = document.getElementById('addSeed') as Button;
   startButton?.addEventListener('click', handleStartClick);
   addSeed?.addEventListener('click', createInsertedCheckbox);
-  input?.addEventListener('change', handleFileSelect);
+  input?.addEventListener('input', handleFileSelect);
   findFile();
 }
 
@@ -51,12 +51,27 @@ function findFile() {
 
 function setSamplesAndHideProgress(allSamples, progressRing) {
   const startButton = document.getElementById('start');
+  const resetButton = document.getElementById('reset');
+  const contentDiv = document.getElementById('content');
+  const input = document.getElementById('fileInput');
+  
   progressRing.classList.add('hidden');
   startButton?.removeAttribute('disabled');
   createCheckbox(allSamples);
+  
+  resetButton.removeAttribute('disabled');
+  resetButton.addEventListener('click', () => {
+    contentDiv.innerHTML = '';
+    seeds = seeds.filter(seed => !allSamples.includes(seed));
+    resetButton?.attributes.setNamedItem(document.createAttribute('disabled'));
+    startButton?.attributes.setNamedItem(document.createAttribute('disabled'));
+    input?.classList.remove('hidden');
+  });
+  
 }
 
 function createCheckbox(allSamples) {
+
   seeds.push(...allSamples);
   const contentDiv = document.getElementById('content');
   const label = document.createElement('label');
@@ -74,6 +89,7 @@ function createCheckbox(allSamples) {
       }
     });
     contentDiv.appendChild(checkbox);
+    
   });
 }
 
@@ -139,6 +155,7 @@ function handleFileSelect() {
       if (allSamples.length === 0) {
         throw new Error("No seed found in JSON file");
       }
+      
       setSamplesAndHideProgress(allSamples, progressRing);
 
     } catch (error) {
@@ -148,6 +165,8 @@ function handleFileSelect() {
       });
       progressRinghidden();
     }
+
+    input.value = '';
   };
 
   reader.readAsText(file);
