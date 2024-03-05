@@ -11,15 +11,17 @@ const vscode = acquireVsCodeApi();
 let seeds = [];
 let supportSeeds = [];
 let count = true;
+let slideValueGlobal = 50;
 const resetButton = document.getElementById('reset');
+const slider = document.getElementById('slider') as Slider;
+const sliderValue = document.getElementById('sliderValue') as slidevalue;
+
 
 window.addEventListener('load', main);
 window.addEventListener('load', eventListener);
 
 async function main() {
   const input = document.getElementById('fileInput') as InputFile;
-  const slider = document.getElementById('slider') as Slider;
-  const sliderValue = document.getElementById('sliderValue') as slidevalue;
   const startButton = document.getElementById('start') as Button;
   const addSeed = document.getElementById('addSeed') as Button;
   startButton?.addEventListener('click', handleStartClick);
@@ -27,6 +29,12 @@ async function main() {
   input?.addEventListener('input', handleFileSelect);
   const resetButton = document.getElementById('reset');
   resetButton?.addEventListener('click', resetSeeds);
+  sliderValue.addEventListener('input', sliderValueSet);
+  slider.addEventListener('input', sliderSet);
+  sliderValue?.attributes.setNamedItem(document.createAttribute('value'));
+  slider?.attributes.setNamedItem(document.createAttribute('value'));
+  slider.value=slideValueGlobal.toString();
+  sliderValue.value=slideValueGlobal;
   findFile();
 }
 document.getElementById('insertedTextContent').addEventListener('keydown', function (event) {
@@ -44,7 +52,7 @@ function handleStartClick() {
   });
   vscode.postMessage({
     command: 'SliderValue',
-    value: sliderValue.value
+    value: slideValueGlobal
   });
 
 }
@@ -59,18 +67,19 @@ function progressRinghidden() {
 function findFile() {
   const savedState = localStorage.getItem('seedsState');
   if (savedState) {
-    const { seeds: savedSeeds, supportSeeds: savedSupportSeeds } = JSON.parse(savedState);
-    if (savedSupportSeeds.length > 0) {
+    const { slideValueGlobal: slideValueSaved, seeds: savedSeeds, supportSeeds: savedSupportSeeds } = JSON.parse(savedState);
+    if (supportSeeds.length > 0) {
       supportSeeds = savedSupportSeeds;
       seedLoading(savedSeeds);
-      
+      slideValueGlobal = slideValueSaved;
+      setSlider(sliderValue, slider, slideValueSaved);
     } else {
       vscode.postMessage({ command: 'findFile' });
     }
   } else {
     vscode.postMessage({ command: 'findFile' });
   }
-    }
+}
 
 function setSamplesAndHideProgress(allSamples, progressRing) {
   const startButton = document.getElementById('start');
@@ -79,15 +88,15 @@ function setSamplesAndHideProgress(allSamples, progressRing) {
   createCheckbox(allSamples);
 
 }
-function resetSeeds(){
+function resetSeeds() {
   const startButton = document.getElementById('start');
-   const contentDiv = document.getElementById('content');
-    contentDiv.innerHTML = '';
-    seeds = [];
-    findFile();
-    resetButton?.attributes.setNamedItem(document.createAttribute('disabled'));
-    startButton?.attributes.setNamedItem(document.createAttribute('disabled'));
-  }
+  const contentDiv = document.getElementById('content');
+  contentDiv.innerHTML = '';
+  seeds = [];
+  findFile();
+  resetButton?.attributes.setNamedItem(document.createAttribute('disabled'));
+  startButton?.attributes.setNamedItem(document.createAttribute('disabled'));
+}
 
 function createCheckbox(allSamples) {
   seeds.push(...allSamples);
@@ -132,6 +141,7 @@ function createCheckbox(allSamples) {
         checkbox.textContent = newValue;
         seeds[index] = newValue;
         supportSeeds.push(newValue);
+        saveSeedsState();
       }
       else {
         textArea.value = checkbox.textContent;
@@ -153,6 +163,7 @@ function createCheckbox(allSamples) {
     contentDiv.appendChild(container);
     contentDiv.appendChild(editButton);
   });
+  saveSeedsState();
 }
 
 
@@ -165,6 +176,7 @@ function createInsertedCheckbox() {
     const checkbox = document.createElement('vscode-checkbox');
     checkbox.setAttribute('checked', '');
     checkbox.textContent = insertedText.value;
+    supportSeeds.push(checkbox.textContent);
     seeds.push(checkbox.textContent);
     insertedText.value = '';
     checkbox.addEventListener('click', () => {
@@ -176,6 +188,7 @@ function createInsertedCheckbox() {
     });
     insertedDiv.appendChild(checkbox);
   }
+   saveSeedsState();
 }
 
 
@@ -242,7 +255,7 @@ function seedLoading(samples) {
   try {
     const progressRing = document.getElementById('progressRing');
     setSamplesAndHideProgress(samples, progressRing);
-    
+
   } catch (error) {
     vscode.postMessage({
       command: 'errorMessage',
@@ -253,6 +266,7 @@ function seedLoading(samples) {
 }
 function saveSeedsState() {
   const seedsState = {
+    slideValueGlobal: slideValueGlobal,
     seeds: seeds,
     supportSeeds: supportSeeds
   };
@@ -262,10 +276,12 @@ function saveSeedsState() {
 function restoreSeedsState() {
   const savedState = localStorage.getItem('seedsState');
   if (savedState) {
-    const { seeds: savedSeeds, supportSeeds: savedSupportSeeds } = JSON.parse(savedState);
-    if (savedSeeds.length>0) {
+    const { slideValueGlobal: slideValueSaved, seeds: savedSeeds, supportSeeds: savedSupportSeeds } = JSON.parse(savedState);
+    if (savedSeeds.length > 0) {
       supportSeeds = savedSupportSeeds;
       seedLoading(savedSeeds);
+      slideValueGlobal = slideValueSaved;
+      setSlider(sliderValue, slider, slideValueSaved);      
     } else {
       progressRinghidden();
     }
@@ -299,35 +315,31 @@ function eventListener() {
         break;
       }
       case 'webviewLostFocus': {
-        vscode.postMessage({
-          command: 'message',
-          text: "salvataggio avvio"
-
-        });
         saveSeedsState();
         break;
       }
       case 'webviewGainedFocus': {
-        vscode.postMessage({
-          command: 'message',
-          text: "caricamento avvio"
-        });
         break;
       }
     }
   },
   );
 }
+function sliderSet() {
+  slideValueGlobal=slider.value;
+  sliderValue.value = slider.value;
+  saveSeedsState();
+}
 
-
-sliderValue.addEventListener('input', function () {
+function sliderValueSet() {
   let value = parseFloat(sliderValue.value);
   value = Math.min(100, Math.max(0, value));
   sliderValue.value = value;
+  slideValueGlobal= value;
   slider.value = value.toString();
-});
-
-slider.addEventListener('input', function () {
-  sliderValue.value = slider.value;
-});
-
+  saveSeedsState();
+}
+function setSlider(sliderValue, slider, value) {
+  sliderValue.value = value;
+  slider.value = value.toString();
+}
