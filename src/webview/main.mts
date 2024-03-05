@@ -10,7 +10,8 @@ provideVSCodeDesignSystem().register(vsCodeButton(), vsCodeOption(), vsCodeProgr
 const vscode = acquireVsCodeApi();
 let seeds = [];
 let supportSeeds = [];
-let count= true;
+let count = true;
+const resetButton = document.getElementById('reset');
 
 window.addEventListener('load', main);
 window.addEventListener('load', eventListener);
@@ -24,8 +25,10 @@ async function main() {
   startButton?.addEventListener('click', handleStartClick);
   addSeed?.addEventListener('click', createInsertedCheckbox);
   input?.addEventListener('input', handleFileSelect);
+  const resetButton = document.getElementById('reset');
+  resetButton?.addEventListener('click', resetSeeds);
   findFile();
-  }
+}
 document.getElementById('insertedTextContent').addEventListener('keydown', function (event) {
   if (event.key === 'Enter') {
     event.preventDefault();
@@ -54,40 +57,41 @@ function progressRinghidden() {
 
 
 function findFile() {
-  if(localStorage.getItem('seedsState')===null){
+  const savedState = localStorage.getItem('seedsState');
+  if (savedState) {
+    const { seeds: savedSeeds, supportSeeds: savedSupportSeeds } = JSON.parse(savedState);
+    if (savedSupportSeeds.length > 0) {
+      supportSeeds = savedSupportSeeds;
+      seedLoading(savedSeeds);
+      
+    } else {
+      vscode.postMessage({ command: 'findFile' });
+    }
+  } else {
     vscode.postMessage({ command: 'findFile' });
-    count= false;
-  }else{
-    restoreSeedsState();
   }
-  
-}
+    }
 
 function setSamplesAndHideProgress(allSamples, progressRing) {
   const startButton = document.getElementById('start');
-  const resetButton = document.getElementById('reset');
-  const contentDiv = document.getElementById('content');
-  const input = document.getElementById('fileInput');
-
   progressRing.classList.add('hidden');
   startButton?.removeAttribute('disabled');
   createCheckbox(allSamples);
 
-  resetButton.removeAttribute('disabled');
-  resetButton.addEventListener('click', () => {
+}
+function resetSeeds(){
+  const startButton = document.getElementById('start');
+   const contentDiv = document.getElementById('content');
     contentDiv.innerHTML = '';
-    localStorage.removeItem('seedsState');
-    seeds = seeds.filter(seed => !supportSeeds.includes(seed));
-    seeds = seeds.filter(seed => !allSamples.includes(seed));
+    seeds = [];
+    findFile();
     resetButton?.attributes.setNamedItem(document.createAttribute('disabled'));
     startButton?.attributes.setNamedItem(document.createAttribute('disabled'));
-    input?.classList.remove('hidden');
-  });
-
-}
+  }
 
 function createCheckbox(allSamples) {
   seeds.push(...allSamples);
+  resetButton.removeAttribute('disabled');
   const contentDiv = document.getElementById('content');
   const label = document.createElement('label');
   label.textContent = "Seed sentences:\n";
@@ -238,6 +242,7 @@ function seedLoading(samples) {
   try {
     const progressRing = document.getElementById('progressRing');
     setSamplesAndHideProgress(samples, progressRing);
+    
   } catch (error) {
     vscode.postMessage({
       command: 'errorMessage',
@@ -247,7 +252,7 @@ function seedLoading(samples) {
   }
 }
 function saveSeedsState() {
-   const seedsState = {
+  const seedsState = {
     seeds: seeds,
     supportSeeds: supportSeeds
   };
@@ -258,13 +263,15 @@ function restoreSeedsState() {
   const savedState = localStorage.getItem('seedsState');
   if (savedState) {
     const { seeds: savedSeeds, supportSeeds: savedSupportSeeds } = JSON.parse(savedState);
-    if(savedSeeds!==null){
-    supportSeeds = savedSupportSeeds;
-    seedLoading(savedSeeds);}else{
-      findFile();
+    if (savedSeeds.length>0) {
+      supportSeeds = savedSupportSeeds;
+      seedLoading(savedSeeds);
+    } else {
+      progressRinghidden();
     }
+  } else {
+    progressRinghidden();
   }
-  
 }
 
 function eventListener() {
@@ -278,7 +285,7 @@ function eventListener() {
       }
         break;
       case 'JsonFileNotFound': {
-        progressRinghidden();
+        restoreSeedsState();
       }
         break;
       case 'SavedFile': {
@@ -291,20 +298,22 @@ function eventListener() {
         //attivare bottone migloramento robustezza
         break;
       }
-      case 'webviewLostFocus':{
+      case 'webviewLostFocus': {
         vscode.postMessage({
           command: 'message',
           text: "salvataggio avvio"
-      
+
         });
         saveSeedsState();
-        break;}
-      case 'webviewGainedFocus':{
+        break;
+      }
+      case 'webviewGainedFocus': {
         vscode.postMessage({
           command: 'message',
           text: "caricamento avvio"
         });
-        break;}
+        break;
+      }
     }
   },
   );
