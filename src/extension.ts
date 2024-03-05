@@ -13,7 +13,7 @@ export function activate(context: vscode.ExtensionContext) {
 	vscode.window.registerTreeDataProvider('alexaSkillTestRobustnessView', infoProvider);
 
 	const start= vscode.commands.registerCommand("alexa-skill-test-robustness.helloWorld", () => {
-		HelloWorldPanel.render(context.extensionUri);
+		HelloWorldPanel.render(context.extensionUri,context);
 	});
 	
 	const openReadme = vscode.commands.registerCommand('alexa-skill-test-robustness.openReadme', () => {

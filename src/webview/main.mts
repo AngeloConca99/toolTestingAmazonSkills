@@ -373,22 +373,23 @@ function eventListener() {
         break;
       }
       case 'filteredFinished': {
-        vscode.postMessage({
-          command:'buttonEnable'
+         vscode.postMessage({
+           command:'buttonEnable'
         });
-        vscode.postMessage({
-          command:'message',
-          text:"prova invio "
-        });
-       
         //attivare bottone migloramento robustezza
         break;
       }
       case 'webviewLostFocus': {
         saveSeedsState();
+        vscode.postMessage({
+          command:'buttonEnable'
+       });
         break;
       }
       case 'webviewGainedFocus': {
+        vscode.postMessage({
+          command:'buttonEnable'
+       });
         break;
       }
       case'button':{  vscode.postMessage({

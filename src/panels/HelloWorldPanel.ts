@@ -12,8 +12,8 @@ import * as fs from 'fs/promises';
 import * as vscode from "vscode";
 
 export class HelloWorldPanel {
-
   public static currentPanel: HelloWorldPanel | undefined;
+  private static context: vscode.ExtensionContext;
   private readonly _panel: vscode.WebviewPanel;
   private _disposables: vscode.Disposable[] = [];
   private readonly timeoutMillis: number = 20000;
@@ -24,8 +24,8 @@ export class HelloWorldPanel {
   private invocationName:string="";
   private start:boolean= false;
 
-
-  private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
+  private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, context: vscode.ExtensionContext) {
+    HelloWorldPanel.context = context;
     this._panel = panel;
     this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
     this._panel.webview.html = this._getWebviewContent(this._panel.webview, extensionUri);
@@ -33,7 +33,7 @@ export class HelloWorldPanel {
     vscode.window.onDidChangeActiveTextEditor(this.handleActiveEditorChange, null, this._disposables);
   }
 
-  public static render(extensionUri: vscode.Uri) {
+  public static render(extensionUri: vscode.Uri,context: vscode.ExtensionContext) {
     if (HelloWorldPanel.currentPanel) {
       HelloWorldPanel.currentPanel._panel.reveal(vscode.ViewColumn.Two);
     } else {
@@ -44,7 +44,7 @@ export class HelloWorldPanel {
         // localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'out')]
       });
 
-      HelloWorldPanel.currentPanel = new HelloWorldPanel(panel, extensionUri);
+      HelloWorldPanel.currentPanel = new HelloWorldPanel(panel, extensionUri,context);
     }
   }
   private handleActiveEditorChange = (editor: vscode.TextEditor | undefined) => {
@@ -123,7 +123,8 @@ export class HelloWorldPanel {
   }
 
   private CreateTxtFile(text: string, webview: vscode.Webview) {
-    this.start=1;
+    this.start=true;
+    HelloWorldPanel.context.globalState.update('startState', this.start);
     
     try {
       const workspaceFolders = vscode.workspace.workspaceFolders;
@@ -202,7 +203,8 @@ export class HelloWorldPanel {
             
             
            await this.filteredGenerated();
-           this.start=0;
+           this.start=false;
+           HelloWorldPanel.context.globalState.update('startState', this.start);
           webview.postMessage({ command: 'filteredFinished' });
            vscode.commands.executeCommand('vscode.open', vscode.Uri.file(this.outputPath + ".json"), { preview: false, viewColumn: vscode.ViewColumn.One });
         });
@@ -261,6 +263,9 @@ export class HelloWorldPanel {
     }
 
   }
+  private prova(webview:vscode.Webview){
+   
+  }
   
 
   private _setWebviewMessageListener(webview: vscode.Webview) {
@@ -290,11 +295,12 @@ export class HelloWorldPanel {
             this.runScript(`java -jar ${quoteSpaces(absoluteScriptPath)} ${quoteSpaces(this.TextFilePath)} ${quoteSpaces(this.outputPath)}`,webview);
             break;
           case 'buttonEnable':
-            webview.postMessage({
+            this.start =HelloWorldPanel.context.globalState.get('startState', false);
+            console.log(this.start);
+           await webview.postMessage({
             command:'button',
             Boolean: this.start
             });
-            //apri il file;
             break;
         }
       },
