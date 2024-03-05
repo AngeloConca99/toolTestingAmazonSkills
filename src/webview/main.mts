@@ -8,11 +8,10 @@ import { text } from "stream/consumers";
 
 provideVSCodeDesignSystem().register(vsCodeButton(), vsCodeOption(), vsCodeProgressRing(), vsCodeCheckbox(), vsCodeTextArea());
 const vscode = acquireVsCodeApi();
-let seeds = [];
-let supportSeeds = [];
+let checkedSeeds=[];
 let uncheckedSeeds=[];
-let seedsCopy=[];
-let editedSeeds =[];
+let manualUncheckedSeeds=[];
+let manualCheckedSeeds =[];
 let startButtonDisable=true;
 let slideValueGlobal = 50;
 const startButton = document.getElementById('start');
@@ -62,6 +61,8 @@ function handleStartClick() {
 
 }
 function progressRinghidden() {
+  startButtonDisable=true;
+  startButton?.attributes.setNamedItem(document.createAttribute('disabled'));
   const progressRing = document.getElementById('progressRing');
   const input = document.getElementById('fileInput');
   progressRing?.classList.add('hidden');
@@ -72,22 +73,21 @@ function progressRinghidden() {
 function findFile() {
   const savedState = localStorage.getItem('seedsState');
   if (savedState) {
-    const { slideValueGlobal: slideValueSaved, editedseeds:editedseeds, seeds: savedSeeds, supportSeeds: savedSupportSeeds, uncheckedSeed:uncheckedSeed} = JSON.parse(savedState);
+    let checkedSeeds=[];
+let uncheckedSeeds=[];
+let manualUncheckedSeeds=[];
+let manualCheckedSeeds =[];
+    const { slideValueGlobal: slideValueSaved, uncheckedSeeds:uncheckedSeeds, checkedSeeds:checkedSeeds, supportSeeds: savedSupportSeeds, uncheckedSeed:uncheckedSeed} = JSON.parse(savedState);
     slideValueGlobal = slideValueSaved;
     setSlider(sliderValue, slider, slideValueSaved);
-    if (uncheckedSeed.length>0||savedSupportSeeds.length>0||editedseeds.length>0) {
-      editedSeeds=editedseeds;
-      supportSeeds=savedSupportSeeds;
-      uncheckedSeeds=uncheckedSeed;
-      seedLoading(savedSeeds);
-      restoreInsertedCheckbox();
-      } else {
-      vscode.postMessage({ command: 'findFile' });
-    }
-  } else {
+    if (!((uncheckedSeed.length>0||savedSupportSeeds.length>0||uncheckedSeeds.length>0)&&savedSeeds.length>0)) {
+        vscode.postMessage({ command: 'findFile' });
+    }else{
+      restoreSeedsState();
+    }}else{
     vscode.postMessage({ command: 'findFile' });
   }
-}
+  }
 
 function setSamplesAndHideProgress(allSamples, progressRing) {
   createCheckbox(allSamples,);
@@ -127,7 +127,7 @@ function createCheckbox(allSamples) {
     container.classList.add('seed-container');
 
     const checkbox = document.createElement('vscode-checkbox');
-    if(uncheckedSeeds.indexOf(seed)===-1){
+    if(uncheckedSeeds.indexOf(index)===-1){
     checkbox.setAttribute('checked', '');
     }else{
       seedsCopy.splice(seedsCopy.indexOf(seed), 1);
@@ -150,11 +150,11 @@ function createCheckbox(allSamples) {
 
     checkbox.addEventListener('click', () => {
       if (checkbox.hasAttribute('checked')) {
-        seedsCopy.splice(seedsCopy.indexOf(seed), 1);
-        uncheckedSeeds.push(seed);
+        seedsCopy.splice(seedsCopy.indexOf(index), 1);
+        uncheckedSeeds[index]=seed;
       } else {
         seedsCopy.push(seed);
-        uncheckedSeeds.splice(uncheckedSeeds.indexOf(seed), 1);
+        uncheckedSeeds.splice(uncheckedSeeds.indexOf(index), 1);
       }
       saveSeedsState();
     });
@@ -199,21 +199,19 @@ function createCheckbox(allSamples) {
 }
 function restoreInsertedCheckbox(){
   const insertedDiv = document.getElementById('insertedContent');
-  supportSeeds.forEach((seed) => {
+  supportSeeds.forEach((seed,index) => {
   const checkbox = document.createElement('vscode-checkbox');
-   if(uncheckedSeeds.indexOf(seed)===-1){
+   if(uncheckedSeeds.indexOf(index)===-1){
         checkbox.setAttribute('checked', '');
-       }else{
-         seedsCopy.push(seed);
-      }
+        seedsCopy.push(seed);}
     checkbox.textContent=seed;
     checkbox.addEventListener('click', () => {
       if (checkbox.hasAttribute('checked')) {
-        seedsCopy.splice(supportSeeds.indexOf(seed), 1);
-       uncheckedSeeds.push(seed);
+        seedsCopy.splice(supportSeeds.indexOf(index), 1);
+        uncheckedSeeds[index]=seed;
       } else {
-        seedsCopy.push(seed);
-        uncheckedSeeds.splice(supportSeeds.indexOf(seed), 1);
+        seedsCopy[index]=seed;
+        uncheckedSeeds.splice(supportSeeds.indexOf(index), 1);
       }
       saveSeedsState();
     });
@@ -325,7 +323,7 @@ function saveSeedsState() {
   const isStartButtonDisabled =startButtonDisable;
   const seedsState = {
     slideValueGlobal: slideValueGlobal,
-    editedseeds:editedSeeds,
+    uncheckedSeeds:editedSeeds,
     seeds: seeds,
     supportSeeds: supportSeeds,
     uncheckedSeed: uncheckedSeeds,
@@ -333,24 +331,27 @@ function saveSeedsState() {
   localStorage.setItem('seedsState', JSON.stringify(seedsState));
 }
 
-function restoreSeedsState() {
+function  restoreSeedsState(){
   const savedState = localStorage.getItem('seedsState');
+  vscode.postMessage({
+    command:'message',
+    text:"ricezione "+ savedState
+  });
   if (savedState) {
-    const { slideValueGlobal: slideValueSaved, editedseeds:editedseeds, seeds: savedSeeds, supportSeeds: savedSupportSeeds, uncheckedSeed:uncheckedSeed} = JSON.parse(savedState);
-    if (savedSeeds.length > 0) {
-      editedSeeds=editedseeds;
+    const { slideValueGlobal: slideValueSaved, uncheckedSeeds:uncheckedSeeds, seeds: savedSeeds, supportSeeds: savedSupportSeeds, uncheckedSeed:uncheckedSeed} = JSON.parse(savedState);
+    slideValueGlobal = slideValueSaved;
+    setSlider(sliderValue, slider, slideValueSaved);
+    if ((uncheckedSeed.length>0||savedSupportSeeds.length>0||uncheckedSeeds.length>0)&&savedSeeds.length>0) {
+      editedSeeds=uncheckedSeeds;
+      supportSeeds=savedSupportSeeds;
       uncheckedSeeds=uncheckedSeed;
-      supportSeeds =savedSupportSeeds;
       seedLoading(savedSeeds);
-      restoreInsertedCheckbox();
-      slideValueGlobal = slideValueSaved;
-      setSlider(sliderValue, slider, slideValueSaved);      
-    } else {
-      progressRinghidden();
-    }
-  } else {
-    progressRinghidden();
-  }
+      restoreInsertedCheckbox();}
+      else{
+        progressRinghidden();
+      }
+}else{
+      progressRinghidden();}
 }
 
 function eventListener() {
