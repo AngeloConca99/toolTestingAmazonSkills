@@ -22,6 +22,7 @@ export class HelloWorldPanel {
   private TextFilePath: string = '';
   private ScoreSeed: number = 0;
   private invocationName:string="";
+  private start:boolean= false;
 
 
   private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
@@ -122,6 +123,7 @@ export class HelloWorldPanel {
   }
 
   private CreateTxtFile(text: string, webview: vscode.Webview) {
+    this.start=1;
     
     try {
       const workspaceFolders = vscode.workspace.workspaceFolders;
@@ -200,8 +202,8 @@ export class HelloWorldPanel {
             
             
            await this.filteredGenerated();
-
-           webview.postMessage({ command: 'filteredFinished' });
+           this.start=0;
+          webview.postMessage({ command: 'filteredFinished' });
            vscode.commands.executeCommand('vscode.open', vscode.Uri.file(this.outputPath + ".json"), { preview: false, viewColumn: vscode.ViewColumn.One });
         });
     } catch (error) {
@@ -287,6 +289,11 @@ export class HelloWorldPanel {
           case 'VUI-UPSET':
             this.runScript(`java -jar ${quoteSpaces(absoluteScriptPath)} ${quoteSpaces(this.TextFilePath)} ${quoteSpaces(this.outputPath)}`,webview);
             break;
+          case 'buttonEnable':
+            webview.postMessage({
+            command:'button',
+            Boolean: this.start
+            });
             //apri il file;
             break;
         }

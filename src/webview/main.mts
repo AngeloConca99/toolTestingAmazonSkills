@@ -13,11 +13,13 @@ let supportSeeds = [];
 let uncheckedSeeds=[];
 let seedsCopy=[];
 let editedSeeds =[];
-let count = true;
+let startButtonDisable=true;
 let slideValueGlobal = 50;
+const startButton = document.getElementById('start');
 const resetButton = document.getElementById('reset');
 const slider = document.getElementById('slider') as Slider;
 const sliderValue = document.getElementById('sliderValue') as slidevalue;
+
 
 
 window.addEventListener('load', main);
@@ -25,7 +27,6 @@ window.addEventListener('load', eventListener);
 
 async function main() {
   const input = document.getElementById('fileInput') as InputFile;
-  const startButton = document.getElementById('start') as Button;
   const addSeed = document.getElementById('addSeed') as Button;
   startButton?.addEventListener('click', handleStartClick);
   addSeed?.addEventListener('click', createInsertedCheckbox);
@@ -47,7 +48,7 @@ document.getElementById('insertedTextContent').addEventListener('keydown', funct
 });
 
 function handleStartClick() {
-  const startButton = document.getElementById('start');
+  startButtonDisable=true;
   startButton?.attributes.setNamedItem(document.createAttribute('disabled'));
   vscode.postMessage({
     command: 'createTxtFile',
@@ -57,6 +58,7 @@ function handleStartClick() {
     command: 'SliderValue',
     value: slideValueGlobal
   });
+  saveSeedsState();
 
 }
 function progressRinghidden() {
@@ -88,15 +90,14 @@ function findFile() {
 }
 
 function setSamplesAndHideProgress(allSamples, progressRing) {
-  const startButton = document.getElementById('start');
+  createCheckbox(allSamples,);
   progressRing.classList.add('hidden');
-  startButton?.removeAttribute('disabled');
-  createCheckbox(allSamples);
-
-}
+  vscode.postMessage({
+    command:'buttonEnable'
+  });
+ }
 function resetSeeds() {
   const insertedDiv = document.getElementById('insertedContent');
-  const startButton = document.getElementById('start');
   const contentDiv = document.getElementById('content');
   contentDiv.innerHTML = '';
   seeds = [];
@@ -107,6 +108,7 @@ function resetSeeds() {
   localStorage.removeItem('seedsState');
   findFile();
   resetButton?.attributes.setNamedItem(document.createAttribute('disabled'));
+  startButtonDisable=true;
   startButton?.attributes.setNamedItem(document.createAttribute('disabled'));
 }
 
@@ -320,12 +322,13 @@ function seedLoading(samples) {
   }
 }
 function saveSeedsState() {
+  const isStartButtonDisabled =startButtonDisable;
   const seedsState = {
     slideValueGlobal: slideValueGlobal,
     editedseeds:editedSeeds,
     seeds: seeds,
     supportSeeds: supportSeeds,
-    uncheckedSeed: uncheckedSeeds
+    uncheckedSeed: uncheckedSeeds,
   };
   localStorage.setItem('seedsState', JSON.stringify(seedsState));
 }
@@ -355,6 +358,7 @@ function eventListener() {
     const message = event.data;
     const command = message.command;
     const samples = message.samples;
+    const buttonEnable=message.Boolean;
     switch (command) {
       case 'JsonFile': {
         seedLoading(samples);
@@ -369,8 +373,14 @@ function eventListener() {
         break;
       }
       case 'filteredFinished': {
-        const startButton = document.getElementById('start');
-        startButton?.removeAttribute('disabled');
+        vscode.postMessage({
+          command:'buttonEnable'
+        });
+        vscode.postMessage({
+          command:'message',
+          text:"prova invio "
+        });
+       
         //attivare bottone migloramento robustezza
         break;
       }
@@ -379,6 +389,18 @@ function eventListener() {
         break;
       }
       case 'webviewGainedFocus': {
+        break;
+      }
+      case'button':{  vscode.postMessage({
+        command:'message',
+        text:"ricezione "+buttonEnable
+      });
+        startButtonDisable=buttonEnable;
+        if (buttonEnable) {
+          startButton.setAttribute('disabled', '');
+        } else {
+          startButton.removeAttribute('disabled');
+        }
         break;
       }
     }
