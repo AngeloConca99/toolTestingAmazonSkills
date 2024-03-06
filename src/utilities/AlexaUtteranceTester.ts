@@ -25,17 +25,17 @@ export class AlexaUtteranceTester {
         } else {
           console.log('else');
           const json = JSON.parse(data);
-          
-         
+
+
           json.forEach(item => {
-              const simulation = new Simulation(
-                 item.generate.toString(),
-                 item.seed,
-                 item.score,
-                );
-              this.simulations.push(simulation);
-              console.log('prova jeson' +simulation.getScore());
-            
+            const simulation = new Simulation(
+              item.generate.toString(),
+              item.seed,
+              item.score,
+            );
+            this.simulations.push(simulation);
+            console.log('prova jeson' + simulation.getScore());
+
           });
           resolve();
         }
@@ -45,7 +45,7 @@ export class AlexaUtteranceTester {
   private calculateTestResults() {
     let passedTests = 0;
     let failedTests = 0;
-  
+
     this.simulations.forEach(simulation => {
       const result = simulation.getSimulationResult();
       if (result && result.status) {
@@ -56,41 +56,40 @@ export class AlexaUtteranceTester {
         }
       }
     });
-  
+
     console.log(`Test Passati: ${passedTests} \nTest Falliti: ${failedTests}`);
     vscode.window.showInformationMessage(`Test Passati: ${passedTests} \nTest Falliti: ${failedTests}`);
   }
-  
+
   public generateTestSummaryFile(): void {
     console.log("Generazione file txt di riepilogo del test...");
-  
-    // Prepara le linee di riepilogo direttamente dall'array `this.simulations`
+
     const summaryLines = this.simulations.map(simulation => {
       const utterance = simulation.getUtterance();
       const score = simulation.getScore();
       const seed = simulation.getSeed();
       const simulationId = simulation.getSimulationId();
       const result = simulation.getSimulationResult();
-  
+
       let status = result ? result.status : 'Unknown';
-      let message ="Message: "+ 'Nessun messaggio di errore o successo disponibile';
-      if (result && result.result && result.result.alexaExecutionInfo &&result.result.alexaExecutionInfo.consideredIntents &&result.result.alexaExecutionInfo.consideredIntents.length > 0) {
+      let message = "Message: " + 'Nessun messaggio di errore o successo disponibile';
+      if (result && result.result && result.result.alexaExecutionInfo && result.result.alexaExecutionInfo.consideredIntents && result.result.alexaExecutionInfo.consideredIntents.length > 0) {
         message = "Intent: " + result.result.alexaExecutionInfo.consideredIntents[0].name;
-      }else if (result && result.result && result.result.error && result.result.error.message) {
-        message ="Message: "+ result.result.error.message;
+      } else if (result && result.result && result.result.error && result.result.error.message) {
+        message = "Message: " + result.result.error.message;
       } else if (result && result.result && result.result.successMessage) {
-        message ="Message: "+ result.result.successMessage;
+        message = "Message: " + result.result.successMessage;
       }
-  
+
       return `Utterance: ${utterance}\nScore: ${score}\nSeed: ${seed}\nSimulation ID: ${simulationId}\nStatus: ${status}\n${message}\n\n`;
     });
-  
+
     const summaryFilePath = path.join(path.dirname(this.filePath), 'test_summary.txt');
-  
+
     fs.writeFileSync(summaryFilePath, summaryLines.join(''));
     console.log(`File di riepilogo test salvato in: ${summaryFilePath}`);
   }
-  
+
 
 
 
@@ -135,15 +134,15 @@ export class AlexaUtteranceTester {
 
   private async fetchSimulationResults(): Promise<void> {
     console.log("Recupero simulazioni in corso...");
-    let simulationResults=[];
+    let simulationResults = [];
     for (const simulation of this.simulations) {
-      
+
       const simulationId = simulation.getSimulationId();
       if (!simulationId) {
         console.log("ID di simulazione non definito per un'utterance, continuo con la prossima.");
         continue;
       }
-      
+
       try {
         const command = `ask smapi get-skill-simulation --simulation-id ${simulationId} --skill-id ${this.skillId}`;
         const result = await this.executeCommand(command);
@@ -156,11 +155,11 @@ export class AlexaUtteranceTester {
     }
     const resultsFilePath = path.join(path.dirname(this.filePath), 'simulation_results.json');
     await fs.promises.writeFile(resultsFilePath, JSON.stringify(simulationResults, null, 2));
-  
+
     console.log('Risultati delle simulazioni associati agli oggetti Simulation.');
   }
-  
-  
+
+
 
   private executeCommand(command: string): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -174,43 +173,43 @@ export class AlexaUtteranceTester {
     });
   }
 
-public async runSimulations(): Promise<void> {
-  try {
-    await this.loadUtterances();
-    await this.findSkillId();
-    
-  
-    const timeoutPromise = new Promise(resolve => setTimeout(async () => {
-      console.log('9 minuti passati. Eseguo fetchSimulationResults.');
-      await this.fetchSimulationResults();
-      resolve('fetchSimulationResults eseguito dopo 9 minuti.');
-    }, 540000)); 
+  public async runSimulations(): Promise<void> {
+    try {
+      await this.loadUtterances();
+      await this.findSkillId();
 
-    
-    await Promise.race([this.forWaiting(), timeoutPromise]);
 
-   
-    if (!this.fetchSimulationResultsCalled) {
-      await this.fetchSimulationResults();
+      const timeoutPromise = new Promise(resolve => setTimeout(async () => {
+        console.log('9 minuti passati. Eseguo fetchSimulationResults.');
+        await this.fetchSimulationResults();
+        resolve('fetchSimulationResults eseguito dopo 9 minuti.');
+      }, 540000));
+
+
+      await Promise.race([this.forWaiting(), timeoutPromise]);
+
+
+      if (!this.fetchSimulationResultsCalled) {
+        await this.fetchSimulationResults();
+      }
+
+      await this.generateTestSummaryFile();
+      await this.calculateTestResults(path.join(path.dirname(this.filePath), 'simulation_results.json'));
+
+    } catch (error) {
+      console.error(error);
     }
-
-    await this.generateTestSummaryFile();
-    await this.calculateTestResults(path.join(path.dirname(this.filePath), 'simulation_results.json'));
-
-  } catch (error) {
-    console.error(error);
   }
-}
-private delay(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-private async forWaiting(): Promise<void> {
-  for (const simulation of this.simulations) {
-    await this.delay(1000); 
-    await this.simulateUtterance(simulation);
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
-}
+
+  private async forWaiting(): Promise<void> {
+    for (const simulation of this.simulations) {
+      await this.delay(1000);
+      await this.simulateUtterance(simulation);
+    }
+  }
 
 
 }

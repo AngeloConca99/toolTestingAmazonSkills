@@ -1,20 +1,20 @@
 export class Simulation {
-  // Property definitions
+
   private utterance: string;
   private seed: string;
-  private score: number; // Score is defined as number to handle float values
+  private score: number;
   private simulationId?: string;
   private simulationResult?: any;
 
-  // Constructor to initialize a new instance of the class with specified values
+
   public constructor(utterance: string, seed: string, score: number) {
     this.utterance = utterance;
     this.seed = seed;
     this.score = score;
   }
 
-  // Getter methods (optional, in TypeScript you can directly access the properties)
- public getUtterance(): string {
+
+  public getUtterance(): string {
     return this.utterance;
   }
 
@@ -34,7 +34,7 @@ export class Simulation {
     return this.simulationResult;
   }
 
-  // Setter methods (optional, in TypeScript you can directly modify the properties)
+
   public setUtterance(value: string) {
     this.utterance = value;
   }
@@ -47,11 +47,11 @@ export class Simulation {
     this.simulationId = value;
   }
 
- public setScore(value: number) {
+  public setScore(value: number) {
     this.score = value;
   }
   public setSimulationResult(result: any) {
-    this.simulationResult = result;}
+    this.simulationResult = result;
+  }
 
-  // You can add other specific methods you need for managing simulations
 }
