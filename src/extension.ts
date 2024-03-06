@@ -12,18 +12,18 @@ export function activate(context: vscode.ExtensionContext) {
 	const infoProvider = new InfoProvider();
 	vscode.window.registerTreeDataProvider('alexaSkillTestRobustnessView', infoProvider);
 
-	const start= vscode.commands.registerCommand("alexa-skill-test-robustness.helloWorld", () => {
-		HelloWorldPanel.render(context.extensionUri,context);
+	const start = vscode.commands.registerCommand("alexa-skill-test-robustness.helloWorld", () => {
+		HelloWorldPanel.render(context.extensionUri, context);
 	});
-	
+
 	const openReadme = vscode.commands.registerCommand('alexa-skill-test-robustness.openReadme', () => {
-        const readmePath = vscode.Uri.file(path.join(context.extensionPath, "README.md"));
-        vscode.commands.executeCommand('markdown.showPreview', readmePath);
-        vscode.window.showInformationMessage('Opening README');
-    });
-  
+		const readmePath = vscode.Uri.file(path.join(context.extensionPath, "README.md"));
+		vscode.commands.executeCommand('markdown.showPreview', readmePath);
+		vscode.window.showInformationMessage('Opening README');
+	});
+
 	context.subscriptions.push(start);
-  }
+}
 
 // This method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() { }

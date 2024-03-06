@@ -21,8 +21,8 @@ export class HelloWorldPanel {
   private outputPath: string = '';
   private TextFilePath: string = '';
   private ScoreSeed: number = 0;
-  private invocationName:string="";
-  private start:boolean= false;
+  private invocationName: string = "";
+  private start: boolean = false;
 
   private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, context: vscode.ExtensionContext) {
     HelloWorldPanel.context = context;
@@ -33,7 +33,7 @@ export class HelloWorldPanel {
     vscode.window.onDidChangeActiveTextEditor(this.handleActiveEditorChange, null, this._disposables);
   }
 
-  public static render(extensionUri: vscode.Uri,context: vscode.ExtensionContext) {
+  public static render(extensionUri: vscode.Uri, context: vscode.ExtensionContext) {
     if (HelloWorldPanel.currentPanel) {
       HelloWorldPanel.currentPanel._panel.reveal(vscode.ViewColumn.Two);
     } else {
@@ -44,17 +44,17 @@ export class HelloWorldPanel {
         // localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'out')]
       });
 
-      HelloWorldPanel.currentPanel = new HelloWorldPanel(panel, extensionUri,context);
+      HelloWorldPanel.currentPanel = new HelloWorldPanel(panel, extensionUri, context);
     }
   }
   private handleActiveEditorChange = (editor: vscode.TextEditor | undefined) => {
     if (!HelloWorldPanel.currentPanel) {
       return;
     }
-  
+
     // Verifica se il pannello del webview è attualmente visibile
     const isWebviewFocused = HelloWorldPanel.currentPanel._panel.visible;
-  
+
     // Invia un messaggio appropriato al webview
     HelloWorldPanel.currentPanel._panel.webview.postMessage({
       command: isWebviewFocused ? 'webviewLostFocus' : 'webviewGainedFocus'
@@ -123,9 +123,9 @@ export class HelloWorldPanel {
   }
 
   private CreateTxtFile(text: string, webview: vscode.Webview) {
-    this.start=true;
+    this.start = true;
     HelloWorldPanel.context.globalState.update('startState', this.start);
-    
+
     try {
       const workspaceFolders = vscode.workspace.workspaceFolders;
       if (!workspaceFolders || workspaceFolders.length === 0) {
@@ -151,7 +151,7 @@ export class HelloWorldPanel {
     try {
       vscode.workspace.fs.writeFile(fullPath, contentBuffer);
       vscode.window.showInformationMessage("File successfully saved");
-     } catch (error) {
+    } catch (error) {
       vscode.window.showErrorMessage("An error occurred shile saving the file: " + error.message);
     }
     webview.postMessage({ command: 'SavedFile' });
@@ -163,55 +163,55 @@ export class HelloWorldPanel {
     const outputFolderPath = path.join(workspacePath, 'output');
 
     try {
-      
-        const data = await fs.readFile(combinedOutputPath, 'utf8');
-        const jsonData = JSON.parse(data);
 
-        
-        const filteredData = jsonData.filter((item: any) => item.score >=  this.ScoreSeed);
+      const data = await fs.readFile(combinedOutputPath, 'utf8');
+      const jsonData = JSON.parse(data);
 
-        await fs.writeFile(outputPath, JSON.stringify(filteredData, null, 2));
-        
 
-        await fs.unlink(combinedOutputPath);
-    
+      const filteredData = jsonData.filter((item: any) => item.score >= this.ScoreSeed);
 
-        
-            await fs.access(outputFolderPath);
-            await fs.rm(outputFolderPath, { recursive: true });
-      
+      await fs.writeFile(outputPath, JSON.stringify(filteredData, null, 2));
+
+
+      await fs.unlink(combinedOutputPath);
+
+
+
+      await fs.access(outputFolderPath);
+      await fs.rm(outputFolderPath, { recursive: true });
+
     } catch (error) {
-        vscode.window.showErrorMessage("An error occurred during file management: " + error.message);
+      vscode.window.showErrorMessage("An error occurred during file management: " + error.message);
     }
-    
-}
 
-  private runScript(command: string,webview: vscode.Webview) {
+  }
+
+  private runScript(command: string, webview: vscode.Webview) {
     try {
-        if (!this.workspaceTmpPath) {
-            vscode.window.showErrorMessage("Temporary folder not found");
-            return;
+      if (!this.workspaceTmpPath) {
+        vscode.window.showErrorMessage("Temporary folder not found");
+        return;
+      }
+
+
+      childProcess.exec(command, async (error, stdout, stderr) => {
+        if (error) {
+          vscode.window.showErrorMessage("Error while executing the script: " + error.message);
+          return;
         }
+        vscode.window.showInformationMessage("Script successfully executed. Output saved in " + this.outputPath);
 
 
-        childProcess.exec(command, async (error, stdout, stderr) => {
-            if (error) {
-                vscode.window.showErrorMessage("Error while executing the script: " + error.message);
-                return;
-            }
-            vscode.window.showInformationMessage("Script successfully executed. Output saved in " + this.outputPath);
-            
-            
-           await this.filteredGenerated();
-           this.start=false;
-           HelloWorldPanel.context.globalState.update('startState', this.start);
-          webview.postMessage({ command: 'filteredFinished' });
-           vscode.commands.executeCommand('vscode.open', vscode.Uri.file(this.outputPath + ".json"), { preview: false, viewColumn: vscode.ViewColumn.One });
-        });
+        await this.filteredGenerated();
+        this.start = false;
+        HelloWorldPanel.context.globalState.update('startState', this.start);
+        webview.postMessage({ command: 'filteredFinished' });
+        vscode.commands.executeCommand('vscode.open', vscode.Uri.file(this.outputPath + ".json"), { preview: false, viewColumn: vscode.ViewColumn.One });
+      });
     } catch (error) {
-        vscode.window.showErrorMessage("Error while executing the script: " + error.message);
+      vscode.window.showErrorMessage("Error while executing the script: " + error.message);
     }
-}
+  }
 
 
   private async findFilesWithTimeout(include: vscode.GlobPattern, exclude?: vscode.GlobPattern, maxResults?: number, timeoutMillis?: number): Thenable<vscode.Uri[]> {
@@ -239,10 +239,10 @@ export class HelloWorldPanel {
         const jsonFileContent = await vscode.workspace.fs.readFile(jsonFileUri);
         const jsonString = new TextDecoder().decode(jsonFileContent);
         const fileJsonObject = JSON.parse(jsonString);
-        
+
 
         if (fileJsonObject && fileJsonObject.interactionModel && fileJsonObject.interactionModel.languageModel && fileJsonObject.interactionModel.languageModel.intents) {
-            fileJsonObject.interactionModel.languageModel.intents.forEach(intent => {
+          fileJsonObject.interactionModel.languageModel.intents.forEach(intent => {
             if (Array.isArray(intent.samples) && intent.samples.length > 0) {
               allSamples.push(...intent.samples);
             }
@@ -263,10 +263,10 @@ export class HelloWorldPanel {
     }
 
   }
-  private prova(webview:vscode.Webview){
-   
+  private prova(webview: vscode.Webview) {
+
   }
-  
+
 
   private _setWebviewMessageListener(webview: vscode.Webview) {
     let absoluteScriptPath = path.join(__dirname, '/implementations/VUI-UPSET.jar');
@@ -292,14 +292,14 @@ export class HelloWorldPanel {
             this.CreateTxtFile(text, webview);
             break;
           case 'VUI-UPSET':
-            this.runScript(`java -jar ${quoteSpaces(absoluteScriptPath)} ${quoteSpaces(this.TextFilePath)} ${quoteSpaces(this.outputPath)}`,webview);
+            this.runScript(`java -jar ${quoteSpaces(absoluteScriptPath)} ${quoteSpaces(this.TextFilePath)} ${quoteSpaces(this.outputPath)}`, webview);
             break;
           case 'buttonEnable':
-            this.start =HelloWorldPanel.context.globalState.get('startState', false);
+            this.start = HelloWorldPanel.context.globalState.get('startState', false);
             console.log(this.start);
-           await webview.postMessage({
-            command:'button',
-            Boolean: this.start
+            await webview.postMessage({
+              command: 'button',
+              Boolean: this.start
             });
             break;
         }
