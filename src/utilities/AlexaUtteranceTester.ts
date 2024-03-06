@@ -174,44 +174,43 @@ export class AlexaUtteranceTester {
     });
   }
 
-
-  public async runSimulations(): Promise<void> {
-    try {
-           this.deleteSimulationFiles();
-      await this.loadUtterances();
-      await this.findSkillId();
-      await this.forWaiting();
+public async runSimulations(): Promise<void> {
+  try {
+    await this.loadUtterances();
+    await this.findSkillId();
+    
+  
+    const timeoutPromise = new Promise(resolve => setTimeout(async () => {
+      console.log('9 minuti passati. Eseguo fetchSimulationResults.');
       await this.fetchSimulationResults();
-      await this.generateTestSummaryFile();
-      await this.calculateTestResults(path.join(path.dirname(this.filePath), 'simulation_results.json'));
+      resolve('fetchSimulationResults eseguito dopo 9 minuti.');
+    }, 540000)); 
 
+    
+    await Promise.race([this.forWaiting(), timeoutPromise]);
 
-    } catch (error) {
-      console.error(error);
+   
+    if (!this.fetchSimulationResultsCalled) {
+      await this.fetchSimulationResults();
     }
+
+    await this.generateTestSummaryFile();
+    await this.calculateTestResults(path.join(path.dirname(this.filePath), 'simulation_results.json'));
+
+  } catch (error) {
+    console.error(error);
   }
-  private async forWaiting() {
-    for (const simulation of this.simulations) {
-      await this.delay(1000);
-      await this.simulateUtterance(simulation);
-    }
+}
+private delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+private async forWaiting(): Promise<void> {
+  for (const simulation of this.simulations) {
+    await this.delay(1000); 
+    await this.simulateUtterance(simulation);
   }
+}
 
 
-
-
-  private deleteSimulationFiles(): void {
-    const simulationResultsPath = path.join(path.dirname(this.filePath), 'simulation_results.json');
-    const simulationIdsPath = path.join(path.dirname(this.filePath), 'simulation_ids.txt');
-
-    if (fs.existsSync(simulationResultsPath)) {
-      fs.unlinkSync(simulationResultsPath);
-    }
-    if (fs.existsSync(simulationIdsPath)) {
-      fs.unlinkSync(simulationIdsPath);
-    }
-  }
-  private async delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
 }
