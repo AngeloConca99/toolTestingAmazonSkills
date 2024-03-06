@@ -5,6 +5,7 @@ import axios from 'axios';
 import * as path from 'path';
 import { Console } from 'console';
 import * as vscode from "vscode";
+import { measureMemory } from 'vm';
 export class AlexaUtteranceTester {
   private filePath: string;
   private invocationName: string;
@@ -72,23 +73,20 @@ export class AlexaUtteranceTester {
       const result = simulation.getSimulationResult();
   
       let status = result ? result.status : 'Unknown';
-      let message = 'Nessun messaggio di errore o successo disponibile';
-  
-      // Estrai il messaggio di errore o successo se presente
-      if (result && result.result && result.result.error && result.result.error.message) {
-        message = result.result.error.message;
+      let message ="Message: "+ 'Nessun messaggio di errore o successo disponibile';
+      if (result && result.result && result.result.alexaExecutionInfo &&result.result.alexaExecutionInfo.consideredIntents &&result.result.alexaExecutionInfo.consideredIntents.length > 0) {
+        message = "Intent: " + result.result.alexaExecutionInfo.consideredIntents[0].name;
+      }else if (result && result.result && result.result.error && result.result.error.message) {
+        message ="Message: "+ result.result.error.message;
       } else if (result && result.result && result.result.successMessage) {
-        message = result.result.successMessage;
+        message ="Message: "+ result.result.successMessage;
       }
   
-      // Includi score e seed nel riepilogo
-      return `Utterance: ${utterance}\nScore: ${score}\nSeed: ${seed}\nSimulation ID: ${simulationId}\nStatus: ${status}\nMessage: ${message}\n\n`;
+      return `Utterance: ${utterance}\nScore: ${score}\nSeed: ${seed}\nSimulation ID: ${simulationId}\nStatus: ${status}\n${message}\n\n`;
     });
   
-    // Percorso al nuovo file di testo di riepilogo
     const summaryFilePath = path.join(path.dirname(this.filePath), 'test_summary.txt');
   
-    // Scrivi le informazioni nel nuovo file di testo
     fs.writeFileSync(summaryFilePath, summaryLines.join(''));
     console.log(`File di riepilogo test salvato in: ${summaryFilePath}`);
   }
@@ -137,23 +135,27 @@ export class AlexaUtteranceTester {
 
   private async fetchSimulationResults(): Promise<void> {
     console.log("Recupero simulazioni in corso...");
-  
+    let simulationResults=[];
     for (const simulation of this.simulations) {
+      
       const simulationId = simulation.getSimulationId();
       if (!simulationId) {
         console.log("ID di simulazione non definito per un'utterance, continuo con la prossima.");
         continue;
       }
-  
+      
       try {
         const command = `ask smapi get-skill-simulation --simulation-id ${simulationId} --skill-id ${this.skillId}`;
         const result = await this.executeCommand(command);
         const parsedResult = JSON.parse(result);
         simulation.setSimulationResult(parsedResult);
+        simulationResults.push(parsedResult);
       } catch (error) {
         console.error(`Errore durante il recupero del risultato per la simulazione ${simulationId}: ${error}`);
       }
     }
+    const resultsFilePath = path.join(path.dirname(this.filePath), 'simulation_results.json');
+    await fs.promises.writeFile(resultsFilePath, JSON.stringify(simulationResults, null, 2));
   
     console.log('Risultati delle simulazioni associati agli oggetti Simulation.');
   }
@@ -175,7 +177,7 @@ export class AlexaUtteranceTester {
 
   public async runSimulations(): Promise<void> {
     try {
-      this.deleteSimulationFiles();
+           this.deleteSimulationFiles();
       await this.loadUtterances();
       await this.findSkillId();
       await this.forWaiting();
@@ -190,7 +192,7 @@ export class AlexaUtteranceTester {
   }
   private async forWaiting() {
     for (const simulation of this.simulations) {
-      await this.delay(1000)
+      await this.delay(1000);
       await this.simulateUtterance(simulation);
     }
   }
