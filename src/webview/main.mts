@@ -186,7 +186,7 @@ function createCheckbox(allSamples) {
         checkbox.textContent = newValue;
         seeds[index] = newValue;
         editedSeeds.push(newValue);
-        seedsCopy.push(newValue);
+        seedsCopy[index]=newValue;
       }
       textArea.value = checkbox.textContent;
       checkbox.classList.remove('hidden');
