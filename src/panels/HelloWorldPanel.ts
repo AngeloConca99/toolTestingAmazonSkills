@@ -122,28 +122,32 @@ export class HelloWorldPanel {
     }
   }
 
-  private CreateTxtFile(text: string, webview: vscode.Webview) {
+  private CreateTxtFile(text: any, webview: vscode.Webview) {
     this.start = true;
     HelloWorldPanel.context.globalState.update('startState', this.start);
 
     try {
-      const workspaceFolders = vscode.workspace.workspaceFolders;
-      if (!workspaceFolders || workspaceFolders.length === 0) {
-        vscode.window.showErrorMessage("Workspace folder not found");
-        return;
-      }
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        if (!workspaceFolders || workspaceFolders.length === 0) {
+            vscode.window.showErrorMessage("Workspace folder not found");
+            return;
+        }
 
-      const workspaceFolder = workspaceFolders[0];
-      this.workspaceTmpPath = path.join(workspaceFolder.uri.fsPath, 'tmp');
-      this.outputPath = path.join(this.workspaceTmpPath, 'output');
-      const folderPath = this.workspaceTmpPath;
-      const fileName = 'input.txt';
-      this.TextFilePath = path.join(this.workspaceTmpPath, fileName);
-      this.saveFileInFolder(text, folderPath, fileName, webview);
+        const workspaceFolder = workspaceFolders[0];
+        this.workspaceTmpPath = path.join(workspaceFolder.uri.fsPath, 'tmp');
+        this.outputPath = path.join(this.workspaceTmpPath, 'output');
+        const folderPath = this.workspaceTmpPath;
+        const fileName = 'input.json';
+        this.TextFilePath = path.join(this.workspaceTmpPath, fileName);
+        
+        
+        const jsonString = typeof text === 'string' ? text : JSON.stringify(text, null, 2);
+        
+        this.saveFileInFolder(jsonString, folderPath, fileName, webview);
     } catch (error) {
-      vscode.window.showErrorMessage("Error in file creation: " + error.message);
+        vscode.window.showErrorMessage("Error in file creation: " + error.message);
     }
-  }
+}
 
   private saveFileInFolder(content: string, folderPath: string, fileName: string, webview: vscode.Webview) {
     const fullPath = vscode.Uri.file(path.join(folderPath, fileName));
@@ -242,11 +246,7 @@ export class HelloWorldPanel {
 
 
         if (fileJsonObject && fileJsonObject.interactionModel && fileJsonObject.interactionModel.languageModel && fileJsonObject.interactionModel.languageModel.intents) {
-          fileJsonObject.interactionModel.languageModel.intents.forEach(intent => {
-            if (Array.isArray(intent.samples) && intent.samples.length > 0) {
-              allSamples.push(...intent.samples);
-            }
-          });
+              allSamples.push(...fileJsonObject.interactionModel.languageModel.intents);
         } else {
           throw new Error("Invalid or missing JSON file structure");
         }
