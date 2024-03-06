@@ -295,7 +295,9 @@ export class HelloWorldPanel {
             this.runScript(`java -jar ${quoteSpaces(absoluteScriptPath)} ${quoteSpaces(this.TextFilePath)} ${quoteSpaces(this.outputPath)}`, webview);
             break;
           case 'buttonEnable':
-            this.start = HelloWorldPanel.context.globalState.get('startState', false);
+            this.start = false;
+        HelloWorldPanel.context.globalState.update('startState', this.start);
+            // this.start = HelloWorldPanel.context.globalState.get('startState', false);
             console.log(this.start);
             await webview.postMessage({
               command: 'button',
