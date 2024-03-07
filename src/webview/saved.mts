@@ -77,9 +77,8 @@ function eventListener(){
     const samples = message.samples;
     const buttonEnable = message.Boolean;
 
-    switch(message){
+    switch(command){
       case 'JsonFile':{
-        vscode.postMessage({ command: 'showMessage', text: 'Json file loaded' });
         seedLoading(samples);
         break;
       }
@@ -95,6 +94,7 @@ function eventListener(){
 
 function setSamplesAndHideProgress(allSamples) {
   progressRing?.classList.add('hidden');
+  startButton?.removeAttribute('disabled');
   hideProgressRing();
   createCheckbox(allSamples);
 }
@@ -102,7 +102,7 @@ function setSamplesAndHideProgress(allSamples) {
 function hideProgressRing() {
   progressRing?.classList.add('hidden');
   startButtonDisable = true;
-  startButton?.attributes.setNamedItem(document.createAttribute('disabled'));
+  
 }
 
 function createCheckbox(allSamples) {
@@ -116,8 +116,8 @@ function createCheckbox(allSamples) {
   seeds.forEach((seed) => {
     const checkbox = document.createElement('vscode-checkbox');
     checkbox.setAttribute('checked', '');
-    // TODO: modifica angelo
-    checkbox.textContent = seed.generate + " | " + seed.score + " (" + seed.intent + ")";
+    
+    checkbox.textContent = seed.generate + " (" + seed.intent + ")";
     checkbox.addEventListener('click', () => {
       if(checkbox.hasAttribute('checked')){
         seedsCopy.splice(seedsCopy.indexOf(seed), 1);
