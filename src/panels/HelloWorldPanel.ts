@@ -4,7 +4,6 @@
 
 import { getUri } from "../utilities/getUri";
 import { getNonce } from "../utilities/getNonce";
-import { lstat } from "fs";
 import { quoteSpaces } from "../utilities/quoteSpaces";
 import * as path from 'path';
 import * as childProcess from 'child_process';
@@ -16,6 +15,7 @@ export class HelloWorldPanel {
   private static context: vscode.ExtensionContext;
   private readonly _panel: vscode.WebviewPanel;
   private _disposables: vscode.Disposable[] = [];
+  
   private readonly timeoutMillis: number = 20000;
   private workspaceTmpPath: string = '';
   private outputPath: string = '';
@@ -111,8 +111,7 @@ export class HelloWorldPanel {
   }
 
   private getCss(webview: vscode.Webview, extensionUri: vscode.Uri): vscode.Uri {
-    const fs = require('fs');
-    const path = require('path');
+
     try {
       const cssDefault = require("../../out/styles.js").default;
       const cssUri = getUri(webview, extensionUri, ["out", cssDefault]);
@@ -160,6 +159,7 @@ export class HelloWorldPanel {
     }
     webview.postMessage({ command: 'SavedFile' });
   }
+
   private async filteredGenerated(): Promise<void> {
     const workspacePath = this.workspaceTmpPath;
     const combinedOutputPath = path.join(workspacePath, 'combined_output.json');
@@ -210,7 +210,7 @@ export class HelloWorldPanel {
         this.start = false;
         HelloWorldPanel.context.globalState.update('startState', this.start);
         webview.postMessage({ command: 'filteredFinished' });
-        vscode.commands.executeCommand('vscode.open', vscode.Uri.file(this.outputPath + ".json"), { preview: false, viewColumn: vscode.ViewColumn.One });
+        vscode.commands.executeCommand('alexa-skill-test-robustness.secondPanel');
       });
     } catch (error) {
       vscode.window.showErrorMessage("Error while executing the script: " + error.message);
@@ -234,7 +234,7 @@ export class HelloWorldPanel {
 
   }
 
-  private async postseed(webview: vscode.Webview) {
+  private async postSeed(webview: vscode.Webview) {
     try {
       const jsonFiles = await this.findFilesWithTimeout('**/skill-package/interactionModels/custom/en-US.json', '**/node_modules/**', 1, this.timeoutMillis);
       let allSamples = [];
@@ -263,9 +263,6 @@ export class HelloWorldPanel {
     }
 
   }
-  private prova(webview: vscode.Webview) {
-
-  }
 
 
   private _setWebviewMessageListener(webview: vscode.Webview) {
@@ -280,7 +277,7 @@ export class HelloWorldPanel {
             vscode.window.showInformationMessage(text);
             break;
           case 'findFile':
-            this.postseed(webview);
+            this.postSeed(webview);
             break;
           case 'errorMessage':
             vscode.window.showErrorMessage(text);
@@ -292,7 +289,7 @@ export class HelloWorldPanel {
             this.CreateTxtFile(text, webview);
             break;
           case 'VUI-UPSET':
-            this.runScript(`java -jar ${quoteSpaces(absoluteScriptPath)} ${quoteSpaces(this.TextFilePath)} ${quoteSpaces(this.outputPath)}`, webview);
+              this.runScript(`java -jar ${quoteSpaces(absoluteScriptPath)} ${quoteSpaces(this.TextFilePath)} ${quoteSpaces(this.outputPath)}`, webview);
             break;
           case 'buttonEnable':
             this.start = false;

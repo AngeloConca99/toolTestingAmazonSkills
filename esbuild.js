@@ -30,6 +30,7 @@ const extensionConfig = {
   external: ["vscode"],
 };
 
+// rename in mainConfig
 const webviewConfig = {
   ...baseConfig,
   target: "es2020",
@@ -37,12 +38,32 @@ const webviewConfig = {
   entryPoints: ["./src/webview/main.mts"],
   outfile: "./out/webview.js"
 };
+
+
+const savedConfig = {
+  ...baseConfig,
+  target: "es2020",
+  format: "esm",
+  entryPoints: ["./src/webview/saved.mts"],
+  outfile: "./out/saved.js"
+};
+
+// rename to mainCss
 const css={
   ...baseConfig,
   target: "es2020",
   format: "esm",
   loader: {".css": "file",},
   entryPoints: ["./src/component/styles.css"],
+  outdir:"./out"
+};
+
+const savedCss={
+  ...baseConfig,
+  target: "es2020",
+  format: "esm",
+  loader: {".css": "file",},
+  entryPoints: ["./src/component/savedStyles.css"],
   outdir:"./out"
 };
 
@@ -53,17 +74,27 @@ const buildExtension = async () => {
 const buildWebview = async () => {
     await build(webviewConfig);
  };
-const builcss = async () => {
+const buildCSS = async () => {
   await build(css);
+};
+
+const buildSaved = async () => {
+  await build(savedConfig);
+};
+
+const buildSavedCss = async () => {
+  await build(savedCss);
 };
 
 
 
 
 const buildAll = async () => {
-       await buildExtension();
-        await buildWebview();
-        await builcss();
+    await buildExtension();
+    await buildWebview();
+    await buildCSS();
+    await buildSaved();
+    await buildSavedCss();
 };
 
 const watchConfig = {
