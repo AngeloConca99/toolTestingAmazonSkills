@@ -296,10 +296,7 @@ async function createInsertedCheckbox() {
   const insertedText = document.getElementById('insertedTextContent');
   if (insertedText.value !== '') {
     const intent =await IntentResponse();
-    vscode.postMessage({
-      command:'message',
-      text:intent
-    });
+    if(intent){
     const checkbox = document.createElement('vscode-checkbox');
     checkbox.setAttribute('checked', '');
     checkbox.textContent = insertedText.value;
@@ -323,7 +320,7 @@ async function createInsertedCheckbox() {
     });
     insertedDiv.appendChild(checkbox);
   saveSeedsState();}
-}
+}}
 
 function postImplementation(implementation: string) {
   vscode.postMessage({
