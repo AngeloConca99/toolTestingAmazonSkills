@@ -237,10 +237,10 @@ export class HelloWorldPanel {
 
   private async postSeed(webview: vscode.Webview) {
     try {
-      const jsonFiles = await this.findFilesWithTimeout('**/skill-package/interactionModels/custom/en-US.json', '**/node_modules/**', 1, this.timeoutMillis);
+      const jsonFile = await this.findFilesWithTimeout('**/skill-package/interactionModels/custom/en-US.json', '**/node_modules/**', 1, this.timeoutMillis);
       let allSamples = [];
 
-      for (const jsonFileUri of jsonFiles) {
+    
         const jsonFileContent = await vscode.workspace.fs.readFile(jsonFileUri);
         const jsonString = new TextDecoder().decode(jsonFileContent);
         const fileJsonObject = JSON.parse(jsonString);
@@ -251,7 +251,7 @@ export class HelloWorldPanel {
         } else {
           throw new Error("Invalid or missing JSON file structure");
         }
-      }
+      
 
       if (allSamples.length === 0) {
         throw new Error("No seeds found in JSON file intents.");
@@ -264,6 +264,29 @@ export class HelloWorldPanel {
     }
 
   }
+  private async showQuickPick(array): Promise<string | undefined> {
+    const intent = await vscode.window.showQuickPick(array, {
+      placeHolder: "Choose an intent"
+    });
+    return intent; 
+  }
+  
+  public async quickPick(allSamples, webview) {
+    const intents: string[] = [];
+  
+    allSamples.forEach((intent) => {
+      intents.push(intent.name);
+    });
+  
+    const intentSelect = await this.showQuickPick(intents); 
+  
+      webview.postMessage({
+        command: 'IntentResponse',
+        text: intentSelect
+      });
+    
+  }
+  
 
 
   private _setWebviewMessageListener(webview: vscode.Webview) {
@@ -273,7 +296,11 @@ export class HelloWorldPanel {
         const command = message.command;
         const text = message.text;
         const value = message.value;
+        const samples=message.samples;
         switch (command) {
+          case'intentRequest':
+          this.quickPick(samples,webview);
+          break;
           case 'message':
             vscode.window.showInformationMessage(text);
             break;
@@ -302,6 +329,7 @@ export class HelloWorldPanel {
               Boolean: this.start
             });
             break;
+            
         }
       },
       undefined,

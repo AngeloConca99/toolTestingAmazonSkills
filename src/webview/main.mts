@@ -4,6 +4,8 @@ import {
 } from "@vscode/webview-ui-toolkit";
 import { getUri } from "../utilities/getUri.js";
 import { text } from "stream/consumers";
+import { QuickPickManager } from "../utilities/QuickPickManager.js";
+
 
 
 provideVSCodeDesignSystem().register(vsCodeButton(), vsCodeOption(), vsCodeProgressRing(), vsCodeCheckbox(), vsCodeTextArea());
@@ -231,28 +233,22 @@ function createCheckbox(allSamples) {
 
 function restoreInsertedCheckbox() {
   const insertedDiv = document.getElementById('insertedContent');
-  supportSeeds.forEach((seed, index) => {
+  supportSeeds.forEach((obj, index) => {
+    obj.samples.forEach((seed,index)=>{
     const checkbox = document.createElement('vscode-checkbox');
     if (!uncheckedSeeds.includes(seed)) {
       checkbox.setAttribute('checked', '');
-      if (!seedsCopy.includes(seed)) {
-        addSeedsAndIntent(seed);
-      }
+        addSeedsAndIntent(seed,obj.name,seedsCopy);
     }
     checkbox.textContent = seed;
     checkbox.addEventListener('click', () => {
       if (checkbox.checked) {
-        let indexco = seedsCopy.indexOf(seed);
-        if (indexco > -1) {
-          removeSeedsFromIntent(seed);
-        }
+          removeSeedsFromIntent(seed,obj.name,seedsCopy);
         if (!uncheckedSeeds.includes(seed)) {
           uncheckedSeeds.push(seed);
         }
       } else {
-        if (!seedsCopy.includes(seed)) {
-          addSeedsAndIntent(seed);
-        }
+          addSeedsAndIntent(seed,obj.name,seedsCopy);
         let indexun = uncheckedSeeds.indexOf(seed);
         if (indexun > -1) {
           uncheckedSeeds.splice(indexun, 1);
@@ -261,64 +257,63 @@ function restoreInsertedCheckbox() {
       saveSeedsState();
     });
     insertedDiv.appendChild(checkbox);
-  });
+  });});
 }
 
-function addSeedsAndIntent(newSeeds) {
+function addSeedsAndIntent(newSeeds, targetIntentName, array) {
   if (!Array.isArray(newSeeds)) {
     newSeeds = [newSeeds];
   }
 
-  const intentIndex = seedsCopy.findIndex(intent => intent.name === 'MySeeds');
+  const intentIndex = array.findIndex(intentObj => intentObj.name === targetIntentName);
 
+ 
   if (intentIndex !== -1) {
     newSeeds.forEach(seed => {
-      if (!seedsCopy[intentIndex].samples.includes(seed)) {
-        seedsCopy[intentIndex].samples.push(seed);
+      if (!array[intentIndex].samples.includes(seed)) {
+        array[intentIndex].samples.push(seed);
       }
     });
   } else {
     const newIntent = {
-      name: 'MySeeds',
+      name: targetIntentName,
       samples: newSeeds,
     };
-    seedsCopy.push(newIntent);
+    array.push(newIntent);
   }
 }
-
-function removeSeedsFromIntent(seedsToRemove) {
+function removeSeedsFromIntent(seedsToRemove, targetIntentName, array) {
   if (!Array.isArray(seedsToRemove)) {
     seedsToRemove = [seedsToRemove];
   }
-  const intentIndex = seedsCopy.findIndex(intent => intent.name === 'MySeeds');
+  const intentIndex = array.findIndex(intentObj => intentObj.name === targetIntentName);
   if (intentIndex !== -1) {
-    seedsCopy[intentIndex].samples = seedsCopy[intentIndex].samples.filter(seed => !seedsToRemove.includes(seed));
+    array[intentIndex].samples = array[intentIndex].samples.filter(seed => !seedsToRemove.includes(seed));
   }
 }
-
-function createInsertedCheckbox() {
+async function createInsertedCheckbox() {
   const insertedDiv = document.getElementById('insertedContent');
   const insertedText = document.getElementById('insertedTextContent');
   if (insertedText.value !== '') {
+    const intent =await IntentResponse();
+    vscode.postMessage({
+      command:'message',
+      text:intent
+    });
     const checkbox = document.createElement('vscode-checkbox');
     checkbox.setAttribute('checked', '');
     checkbox.textContent = insertedText.value;
-    supportSeeds.push(checkbox.textContent);
-    addSeedsAndIntent(checkbox.textContent);
+    addSeedsAndIntent(checkbox.textContent,intent,supportSeeds);
+    addSeedsAndIntent(checkbox.textContent,intent,seedsCopy);
     insertedText.value = '';
     checkbox.addEventListener('click', () => {
       if (checkbox.checked) {
-        let indexco = seedsCopy.indexOf(checkbox.textContent);
-        if (indexco > -1) {
-          removeSeedsFromIntent(checkbox.textContent);
-        }
+          removeSeedsFromIntent(checkbox.textContent,intent,seedsCopy);
         if (!uncheckedSeeds.includes(checkbox.textContent)) {
           uncheckedSeeds.push(checkbox.textContent);
         }
       } else {
-        if (!seedsCopy.includes(checkbox.textContent)) {
-          addSeedsAndIntent(checkbox.textContent);
-        }
+        addSeedsAndIntent(checkbox.textContent,intent,seedsCopy);
         let indexun = uncheckedSeeds.indexOf(checkbox.textContent);
         if (indexun > -1) {
           uncheckedSeeds.splice(indexun, 1);
@@ -327,8 +322,7 @@ function createInsertedCheckbox() {
       saveSeedsState();
     });
     insertedDiv.appendChild(checkbox);
-  }
-  saveSeedsState();
+  saveSeedsState();}
 }
 
 function postImplementation(implementation: string) {
@@ -438,12 +432,30 @@ function restoreSeedsState() {
     hideProgressRing();
   }
 }
+function IntentResponse() {
+  return new Promise((resolve) => {
+    function listener(event) {
+      const message = event.data; 
+      if (message.command === 'IntentResponse') {
+        window.removeEventListener('message', listener); 
+        resolve(message.text); 
+      }
+    }
+    window.addEventListener('message', listener);
+    vscode.postMessage({
+      command:'intentRequest',
+      samples: seeds
+
+    });
+  });
+}
 
 function eventListener() {
   window.addEventListener('message', event => {
     const message = event.data;
     const command = message.command;
     const samples = message.samples;
+    const text =message.text;
     const buttonEnable = message.Boolean;
     switch (command) {
       case 'JsonFile': {
@@ -456,36 +468,37 @@ function eventListener() {
         break;
       case 'SavedFile': {
         postImplementation('VUI-UPSET');
-        break;
       }
+        break;
+      
       case 'filteredFinished': {
         vscode.postMessage({
           command: 'buttonEnable'
-        });
+        });}
         break;
-      }
+      
       case 'webviewLostFocus': {
         saveSeedsState();
         vscode.postMessage({
           command: 'buttonEnable'
-        });
+        });}
         break;
-      }
+      
       case 'webviewGainedFocus': {
         vscode.postMessage({
           command: 'buttonEnable'
-        });
+        });}
         break;
-      }
+      
       case 'button': {
         startButtonDisable = buttonEnable;
         if (buttonEnable) {
           startButton.setAttribute('disabled', '');
         } else {
           startButton.removeAttribute('disabled');
-        }
+        }}
         break;
-      }
+      
     }
   },
   );
