@@ -211,6 +211,7 @@ export class HelloWorldPanel {
         HelloWorldPanel.context.globalState.update('startState', this.start);
         webview.postMessage({ command: 'filteredFinished' });
         vscode.commands.executeCommand('alexa-skill-test-robustness.secondPanel');
+        //SecondPanel.setInputFilePath(inputPath);
       });
     } catch (error) {
       vscode.window.showErrorMessage("Error while executing the script: " + error.message);

@@ -12,6 +12,7 @@ let slideValueGlobal = 0;
 let startButtonDisable = true;
 let seeds = [];
 let seedsCopy = [];
+let uncheckedSeeds = [];
 
 const startButton = document.getElementById('start');
 const slider = document.getElementById('slider');

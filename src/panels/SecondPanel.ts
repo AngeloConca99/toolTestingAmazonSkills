@@ -8,6 +8,8 @@ import * as path from 'path';
 import * as childProcess from 'child_process';
 import * as fs from 'fs/promises';
 import * as vscode from "vscode";
+import { group } from "console";
+import { groupSorting } from "../utilities/groupSorting";
 
 export class SecondPanel {
     public static currentPanel: SecondPanel | undefined;
@@ -149,7 +151,7 @@ export class SecondPanel {
       //   const jsonString = new TextDecoder().decode(jsonFileContent);
       //   const fileJsonObject = JSON.parse(jsonString);
       if (jsonObject) {
-            allSamples.push(...jsonObject);
+            allSamples.push(...groupSorting(jsonObject));
             vscode.window.showInformationMessage(jsonString);
       } else {
         throw new Error("Invalid or missing JSON file structure");
