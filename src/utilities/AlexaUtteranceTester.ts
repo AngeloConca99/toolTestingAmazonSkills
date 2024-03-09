@@ -22,9 +22,7 @@ export class AlexaUtteranceTester {
   private loadUtterances(): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
-        console.log('else');
         this.sentence.forEach(item => {
-          console.log(" "+item.intent);
           const simulation = new Simulation(
             item.generate.toString(),
             item.seed,
@@ -32,64 +30,58 @@ export class AlexaUtteranceTester {
             item.intent.toString()
           );
           this.simulations.push(simulation);
-          console.log('prova jeson' + simulation.getScore());
         });
         resolve();
       } catch (error) {
-        reject("Errore nell'elaborazione dei dati: " + error);
+        reject("Error in data processing: " + error);
       }
     });
   }
   
-  private calculateTestResults() {
-    let passedTests = 0;
-    let failedTests = 0;
-
-    this.simulations.forEach(simulation => {
-      const result = simulation.getSimulationResult();
-      if (result && result.status) {
-        if (result.status === "FAILED") {
-          failedTests++;
-        } else {
-          passedTests++;
-        }
-      }
-    });
-
-    console.log(`Test Passati: ${passedTests} \nTest Falliti: ${failedTests}`);
-    vscode.window.showInformationMessage(`Test Passati: ${passedTests} \nTest Falliti: ${failedTests}`);
-  }
+ 
 
   public generateTestSummaryFile(): void {
-    console.log("Generazione file txt di riepilogo del test...");
+    let passed=0;
+    let failed=0;
 
     const summaryLines = this.simulations.map(simulation => {
       const utterance = simulation.getUtterance();
-      const score = simulation.getScore();
+      const score = simulation.getScore()*100;
       const seed = simulation.getSeed();
       const simulationId = simulation.getSimulationId();
       const expectedIntent=simulation.getIntent();
-      const result = simulation.getSimulationResult();
-
-      let status = result ? result.status : 'Unknown';
-      let message = "Message: " + 'Nessun messaggio di errore o successo disponibile';
+      let result = simulation.getSimulationResult();
+      let status=" ";
+      let intentResultName=" ";
+      
+      
+      let message = "Message: " + 'No error or success messages available';
       let intentResult;
       if (result && result.result && result.result.alexaExecutionInfo && result.result.alexaExecutionInfo.consideredIntents && result.result.alexaExecutionInfo.consideredIntents.length > 0) {
-        intentResult = "Result Intent: " + result.result.alexaExecutionInfo.consideredIntents[0].name;
+        intentResultName = result.result.alexaExecutionInfo.consideredIntents[0].name;
+        intentResult = "Result Intent: " + intentResultName;
       }
       if (result && result.result && result.result.error && result.result.error.message) {
         message = "Message: " + result.result.error.message;
       } else if (result && result.result && result.result.successMessage) {
         message = "Message: " + result.result.successMessage;
       }
+      status = (expectedIntent === intentResultName) ? 'Success' : 'Failed';
+      result.status=status;
+      simulation.setSimulationResult(result);
+      if(status ==='Failed'){
+        failed++;
+      }else{
+        passed++;
+      }
 
       return `Utterance: ${utterance}\nScore: ${score}\nSeed: ${seed}\nSimulation ID: ${simulationId}\nStatus: ${status}\n${message}\n${intentResult}\nExpectedIntent: ${expectedIntent} \n\n`;
     });
-
+    vscode.window.showInformationMessage("Test Passed: "+passed+"Test Failed: "+ failed );
     const summaryFilePath = path.join(path.dirname(this.filePath), 'test_summary.txt');
 
     fs.writeFileSync(summaryFilePath, summaryLines.join(''));
-    console.log(`File di riepilogo test salvato in: ${summaryFilePath}`);
+    vscode.window.showInformationMessage(`Test summary file saved in: ${summaryFilePath}`);
   }
 
 
@@ -104,44 +96,46 @@ export class AlexaUtteranceTester {
       if (foundSkill) {
         this.skillId = foundSkill.skillId;
       } else {
-        throw new Error('Skill ID non trovato.');
+        throw new Error('Skill ID not found');
       }
     } catch (error) {
-      console.error(`Errore durante la ricerca dello Skill ID o l'analisi dell'output: ${error}`);
-      throw error;
+      const errorMessage = `Error while searching for Skill ID or parsing output: ${error.message}`;
+      throw errorMessage;
     }
   }
-  private async simulateUtterance(simulation: Simulation): Promise<void> {
-    console.log("simulazione in corso di " + simulation.getUtterance());
+  private async simulateUtterance(simulation: Simulation, retryCount = 0): Promise<void> {
     if (!this.skillId) {
-      throw new Error('Skill ID non trovato.');
+      throw new Error('Skill ID not found');
     }
-
+  
+    const command = `ask smapi simulate-skill --skill-id ${this.skillId} --input-content "${simulation.getUtterance()}" --device-locale en-US`;
     try {
-      const command = `ask smapi simulate-skill --skill-id ${this.skillId} --input-content "${simulation.getUtterance()}" --device-locale en-US`;
       const out = await this.executeCommand(command);
       const response = JSON.parse(out);
       const simulationId = response.id;
-
       if (simulationId) {
         simulation.setSimulationId(simulationId);
       } else {
-        throw new Error('ID di simulazione non trovato.');
+        throw new Error('Simulation ID not found');
       }
     } catch (error) {
-      console.error(`Errore durante la simulazione: ${error}`);
-      throw error;
+      if (error.toString().includes("409") && retryCount < 5) {
+        await new Promise(resolve => setTimeout(resolve, 5000)); 
+        return this.simulateUtterance(simulation, retryCount + 1); 
+      } else {
+        const errormessage=`Error during simulation: ${error}`;
+        throw error;
+      }
     }
   }
+  
 
   private async fetchSimulationResults(): Promise<void> {
-    console.log("Recupero simulazioni in corso...");
     let simulationResults = [];
     for (const simulation of this.simulations) {
 
       const simulationId = simulation.getSimulationId();
       if (!simulationId) {
-        console.log("ID di simulazione non definito per un'utterance, continuo con la prossima.");
         continue;
       }
 
@@ -152,13 +146,12 @@ export class AlexaUtteranceTester {
         simulation.setSimulationResult(parsedResult);
         simulationResults.push(parsedResult);
       } catch (error) {
-        console.error(`Errore durante il recupero del risultato per la simulazione ${simulationId}: ${error}`);
+        const errorMessage=`Error getting result for simulation ${simulationId}: ${error}`;
+        throw new Error(errorMessage);
       }
     }
     const resultsFilePath = path.join(path.dirname(this.filePath), 'simulation_results.json');
     await fs.promises.writeFile(resultsFilePath, JSON.stringify(simulationResults, null, 2));
-
-    console.log('Risultati delle simulazioni associati agli oggetti Simulation.');
   }
 
 
@@ -167,7 +160,7 @@ export class AlexaUtteranceTester {
     return new Promise((resolve, reject) => {
       exec(command, (error, stdout, stderr) => {
         if (error) {
-          console.error(`Errore durante l'esecuzione del comando: ${error}`);
+          const errorMessage=`Error executing command: ${error}`;
           return reject(error);
         }
         resolve(stdout);
@@ -176,32 +169,44 @@ export class AlexaUtteranceTester {
   }
 
   public async runSimulations(): Promise<void> {
-    try {
-      await this.loadUtterances();
-      await this.findSkillId();
+    await vscode.window.withProgress({
+        location: vscode.ProgressLocation.Notification,
+        title: "Running simulations: ",
+        cancellable: false
+    }, async (progress) => {
+        try {
+            progress.report({ message: "Loading utterances..." });
+            await this.loadUtterances();
 
+            progress.report({ message: "Finding Skill ID..." });
+            await this.findSkillId();
 
-      const timeoutPromise = new Promise(resolve => setTimeout(async () => {
-        console.log('9 minuti passati. Eseguo fetchSimulationResults.');
-        await this.fetchSimulationResults();
-        resolve('fetchSimulationResults eseguito dopo 9 minuti.');
-      }, 540000));
+            progress.report({ message: "Waiting for simulations to complete..." });
 
+            const timeoutPromise = setTimeout(async () => {
+                await this.fetchSimulationResults();
+            }, 540000);
 
-      await Promise.race([this.forWaiting(), timeoutPromise]);
+            await this.forWaiting();
 
+            clearTimeout(timeoutPromise);
 
-      if (!this.fetchSimulationResultsCalled) {
-        await this.fetchSimulationResults();
-      }
+            if (!this.fetchSimulationResultsCalled) {
+                progress.report({ message: "Fetching the results..." });
+                await this.fetchSimulationResults();
+            }
 
-      await this.generateTestSummaryFile();
-      await this.calculateTestResults(path.join(path.dirname(this.filePath), 'simulation_results.json'));
+            progress.report({ message: "Generating test summary..." });
+            await this.generateTestSummaryFile();
 
-    } catch (error) {
-      console.error(error);
-    }
-  }
+        } catch (error) {
+            console.error(error);
+            vscode.window.showErrorMessage(`Error running simulations: ${error}`);
+        }
+    });
+}
+
+  
   private delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }

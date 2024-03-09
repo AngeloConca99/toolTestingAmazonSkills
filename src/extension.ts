@@ -21,11 +21,11 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.window.showInformationMessage('Opening README');
 		}),
 
-		vscode.commands.registerCommand("alexa-skill-test-robustness.helloWorld", () => {
+		vscode.commands.registerCommand("alexa-skill-test-robustness.GenerationPanel", () => {
 			HelloWorldPanel.render(context.extensionUri, context);
 		}),
 
-		vscode.commands.registerCommand("alexa-skill-test-robustness.secondPanel",  (arg) => {
+		vscode.commands.registerCommand("alexa-skill-test-robustness.TestingPanel",  (arg) => {
 			
 			vscode.workspace.findFiles("**/tmp/output.json", "**/node_modules/**", 1).then((files) => {
 				if (files.length > 0){

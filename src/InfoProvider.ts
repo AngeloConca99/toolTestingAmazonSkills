@@ -8,14 +8,19 @@ export class InfoProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
     getChildren(element?: vscode.TreeItem): Thenable<vscode.TreeItem[]> {
         if (element === undefined) {
             // Qui definisci i nodi radice della tua TreeView
-            const startPanelItem = new vscode.TreeItem("Avvia l'estensione", vscode.TreeItemCollapsibleState.None);
-            startPanelItem.command = { command: 'alexa-skill-test-robustness.helloWorld', title: "Avvia", arguments: [] };
-            const openReadmeItem = new vscode.TreeItem("Apri README", vscode.TreeItemCollapsibleState.None);
-            openReadmeItem.command = { command: 'alexa-skill-test-robustness.openReadme', title: "Apri README", arguments: [] };
+            const startPanelItem = new vscode.TreeItem("Generation Panel", vscode.TreeItemCollapsibleState.None);
+            startPanelItem.command = { command: 'alexa-skill-test-robustness.GenerationPanel', title: "Generation Panel", arguments: [] };
+            const openReadmeItem = new vscode.TreeItem("README", vscode.TreeItemCollapsibleState.None);
+            openReadmeItem.command = { command: 'alexa-skill-test-robustness.openReadme', title: "README", arguments: [] };
+            const TestingPanelItem = new vscode.TreeItem("Testing Panel", vscode.TreeItemCollapsibleState.None);
+            TestingPanelItem.command = { command: 'alexa-skill-test-robustness.TestingPanel', title: "Testing Panel", arguments: [] };
+
+
 
             return Promise.resolve([
                 startPanelItem,
-                openReadmeItem
+                openReadmeItem,
+                TestingPanelItem
             ]);
         }
         return Promise.resolve([]);

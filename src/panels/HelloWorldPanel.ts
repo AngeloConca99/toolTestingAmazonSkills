@@ -190,37 +190,45 @@ export class HelloWorldPanel {
     }
 
   }
-
   private runScript(command: string, webview: vscode.Webview) {
-    try {
-      if (!this.workspaceTmpPath) {
-        vscode.window.showErrorMessage("Temporary folder not found");
-        return;
-      }
+    vscode.window.withProgress({
+        location: vscode.ProgressLocation.Notification,
+        title: "Executing script...",
+        cancellable: false // Imposta su false se l'operazione non può essere annullata
+    }, async (progress) => {
+        return new Promise<void>((resolve, reject) => {
+            if (!this.workspaceTmpPath) {
+                vscode.window.showErrorMessage("Temporary folder not found");
+                return reject(new Error("Temporary folder not found"));
+            }
 
+            childProcess.exec(command, async (error, stdout, stderr) => {
+                if (error) {
+                    vscode.window.showErrorMessage("Error while executing the script: " + error.message);
+                    return reject(error);
+                }
+                vscode.window.showInformationMessage("Script successfully executed. Output saved in " + this.outputPath);
 
-      childProcess.exec(command, async (error, stdout, stderr) => {
-        if (error) {
-          vscode.window.showErrorMessage("Error while executing the script: " + error.message);
-          return;
-        }
-        vscode.window.showInformationMessage("Script successfully executed. Output saved in " + this.outputPath);
-
-
-        await this.filteredGenerated();
-        this.start = false;
-        HelloWorldPanel.context.globalState.update('startState', this.start);
-        webview.postMessage({ command: 'filteredFinished' });
-        this.invocationName=HelloWorldPanel.context.globalState.get('invocationName',this.invocationName);
-        console.log(" non capisco perche non va "+this.invocationName);
-        vscode.commands.executeCommand('alexa-skill-test-robustness.secondPanel',this.invocationName);
-      });
-    } catch (error) {
-      vscode.window.showErrorMessage("Error while executing the script: " + error.message);
-    }
-  }
-
-
+                try {
+                    await this.filteredGenerated();
+                    this.start = false;
+                    HelloWorldPanel.context.globalState.update('startState', this.start);
+                    webview.postMessage({ command: 'filteredFinished' });
+                    this.invocationName = HelloWorldPanel.context.globalState.get('invocationName', this.invocationName);
+                    vscode.commands.executeCommand('alexa-skill-test-robustness.TestingPanel', this.invocationName);
+                    resolve();
+                } catch (innerError) {
+                    vscode.window.showErrorMessage("Error after executing the script: " + innerError.message);
+                    reject(innerError);
+                }
+            });
+        });
+    }).then(() => {
+        vscode.window.showInformationMessage("Script execution and post-processing completed successfully.");
+    }).catch(error => {
+        vscode.window.showErrorMessage("An error occurred during script execution or post-processing:", error);
+    });
+}
   private async findFilesWithTimeout(include: vscode.GlobPattern, exclude?: vscode.GlobPattern, maxResults?: number, timeoutMillis?: number): Thenable<vscode.Uri[]> {
     const tokenSource = new vscode.CancellationTokenSource();
     const timeout = timeoutMillis ? setTimeout(() => tokenSource.cancel(), timeoutMillis) : undefined;
@@ -318,10 +326,7 @@ export class HelloWorldPanel {
               this.runScript(`java -jar ${quoteSpaces(absoluteScriptPath)} ${quoteSpaces(this.TextFilePath)} ${quoteSpaces(this.outputPath)}`, webview);
             break;
           case 'buttonEnable':
-            this.start = false;
-        HelloWorldPanel.context.globalState.update('startState', this.start);
-            // this.start = HelloWorldPanel.context.globalState.get('startState', false);
-            console.log(this.start);
+             this.start = HelloWorldPanel.context.globalState.get('startState', false);
             await webview.postMessage({
               command: 'button',
               Boolean: this.start
@@ -339,7 +344,6 @@ export class HelloWorldPanel {
   }
   private saveInvocationName(text){
     this.invocationName=text;
-    console.log("che palle"+ text);
     HelloWorldPanel.context.globalState.update('invocationName', this.invocationName);
   }
 }

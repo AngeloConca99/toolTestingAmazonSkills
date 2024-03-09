@@ -29,32 +29,9 @@ async function main() {
   slider?.attributes.setNamedItem(document.createAttribute('value'));
   slider.value = slideValueGlobal.toString();
   sliderValue.value = slideValueGlobal;
- // restoreSeedsState();
   vscode.postMessage({ command: 'findFile' });
 }
-function buttonEnable() {
-  vscode.postMessage({
-    command: 'TestingButton'
-  });
-}
 
-
-// *** SLIDER METHODS ***
-
-function setSlider() {
-  slideValueGlobal = slider.value;
-  sliderValue.value = slider.value;
-  updateCheckboxesVisibility();
-}
-
-function setSliderValue() {
-  let value = parseFloat(sliderValue.value);
-  value = Math.min(100, Math.max(0, value));
-  sliderValue.value = value;
-  slideValueGlobal = value;
-  slider.value = value.toString();
-  updateCheckboxesVisibility();
-}
 function handleTestingClick() {
   vscode.postMessage({
     command: 'StartTesting',
@@ -75,10 +52,6 @@ function eventListener() {
       }
         break;
       case 'Button': {
-        vscode.postMessage({
-          command: 'message',
-          text: "Roberto"
-        });
         if (buttonEnable) {
           TestButton.removeAttribute('disabled');
 
@@ -98,17 +71,18 @@ function setSamplesAndHideProgress(allSamples) {
 }
 
 function createCheckbox(allSamples) {
+  
   restoreSeedsState();
   seeds.push(...allSamples);
   seedsCopy = deepClone(allSamples);
 
   const labelLeft = document.createElement('label');
-  labelLeft.textContent = "Seed sentences (Left):\n";
+  labelLeft.textContent = "Seed sentences:\n";
   const leftContainer = document.querySelector('.left-container');
   leftContainer?.appendChild(labelLeft);
 
   const labelRight = document.createElement('label');
-  labelRight.textContent = "Seed sentences (Right):\n";
+  labelRight.textContent = "Seed sentences:\n";
   const rightContainer = document.querySelector('.right-container');
   rightContainer?.appendChild(labelRight);
 
@@ -135,8 +109,9 @@ function createCheckbox(allSamples) {
         }
       } else {
         seedsCopy.push(seed);
-        if(uncheckedSeeds.includes(seed.generate)){
-          uncheckedSeeds.splice(uncheckedSeeds.indexOf(seed.generate),1);
+        let indexun = uncheckedSeeds.indexOf(seed);
+        if (indexun > -1) {
+          uncheckedSeeds.splice(indexun, 1);
         }
       }
       saveSeedsState();
@@ -146,9 +121,36 @@ function createCheckbox(allSamples) {
     } else {
       rightContainer?.appendChild(checkbox);
     }});
+    TestIsEnable();
     
-  buttonEnable();
 }
+let debounceTimer;
+
+function setSlider() {
+  slideValueGlobal = slider.value;
+  sliderValue.value = slider.value;
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    updateCheckboxesVisibility();
+  }, 300);
+}
+
+
+let sliderTimeout;
+
+function setSliderValue() {
+  let value = parseFloat(sliderValue.value);
+  value = Math.min(100, Math.max(0, value));
+  sliderValue.value = value;
+  slideValueGlobal = value;
+  slider.value = value.toString();
+
+  clearTimeout(sliderTimeout);
+  sliderTimeout = setTimeout(() => {
+    updateCheckboxesVisibility();
+  }, 300); 
+}
+
 function updateCheckboxesVisibility() {
   let sliderScore = parseFloat(slider.value); 
   sliderScore=sliderScore/100;
@@ -194,7 +196,12 @@ function restoreSeedsState() {
     }
 }}
 
-  
+function TestIsEnable(){
+  vscode.postMessage({
+    command:'TestingButton'
+
+  });
+}
 
 
 function deepClone(allseeds) {

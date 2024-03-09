@@ -398,11 +398,7 @@ function restoreSeedsState() {
     const { slideValueGlobal: slideValueSaved, edited_seeds: editedSeed, seeds: savedSeeds, support_Seeds: savedSupportSeeds, unchecked_Seed: uncheckedSeed } = JSON.parse(savedState);
     slideValueGlobal = slideValueSaved;
     
-    if ((uncheckedSeed.length > 0 || savedSupportSeeds.length > 0 || editedSeed.length > 0) && savedSeeds.length > 0) {
-      vscode.postMessage({
-        command: 'message',
-        text: "1 " + savedState
-      });
+    if (savedSeeds.length > 0) {
       editedSeeds.push(...editedSeed);
       supportSeeds.push(...savedSupportSeeds);
       uncheckedSeeds.push(...uncheckedSeed);

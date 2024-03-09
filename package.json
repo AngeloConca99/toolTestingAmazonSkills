@@ -32,8 +32,8 @@
     },
     "commands": [
       {
-        "command": "alexa-skill-test-robustness.helloWorld",
-        "title": "Inizializzazione"
+        "command": "alexa-skill-test-robustness.GenerationPanel",
+        "title": "Generation Panel"
       },
       
       {
@@ -42,8 +42,8 @@
       },
 
       {
-        "command": "alexa-skill-test-robustness.secondPanel",
-        "title": "Second Panel"
+        "command": "alexa-skill-test-robustness.TestingPanel",
+        "title": "Testing Panel"
       }
     ]
   },
