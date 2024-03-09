@@ -8,40 +8,39 @@ import * as vscode from "vscode";
 import { measureMemory } from 'vm';
 export class AlexaUtteranceTester {
   private filePath: string;
+  private sentence:any;
   private invocationName: string;
   private skillId: string | null = null;
   private utterances: string[] = [];
   private simulations: Simulation[] = [];
 
-  constructor(filePath: string, invocationName: string) {
+  constructor(filePath: string,value:any, invocationName: string) {
     this.filePath = filePath;
     this.invocationName = invocationName;
+    this.sentence=value;
   }
   private loadUtterances(): Promise<void> {
     return new Promise((resolve, reject) => {
-      fs.readFile(this.filePath, 'utf8', (err, data) => {
-        if (err) {
-          reject("Errore nella lettura del file: " + err);
-        } else {
-          console.log('else');
-          const json = JSON.parse(data);
-
-
-          json.forEach(item => {
-            const simulation = new Simulation(
-              item.generate.toString(),
-              item.seed,
-              item.score,
-            );
-            this.simulations.push(simulation);
-            console.log('prova jeson' + simulation.getScore());
-
-          });
-          resolve();
-        }
-      });
+      try {
+        console.log('else');
+        this.sentence.forEach(item => {
+          console.log(" "+item.intent);
+          const simulation = new Simulation(
+            item.generate.toString(),
+            item.seed,
+            item.score,
+            item.intent.toString()
+          );
+          this.simulations.push(simulation);
+          console.log('prova jeson' + simulation.getScore());
+        });
+        resolve();
+      } catch (error) {
+        reject("Errore nell'elaborazione dei dati: " + error);
+      }
     });
   }
+  
   private calculateTestResults() {
     let passedTests = 0;
     let failedTests = 0;
@@ -69,19 +68,22 @@ export class AlexaUtteranceTester {
       const score = simulation.getScore();
       const seed = simulation.getSeed();
       const simulationId = simulation.getSimulationId();
+      const expectedIntent=simulation.getIntent();
       const result = simulation.getSimulationResult();
 
       let status = result ? result.status : 'Unknown';
       let message = "Message: " + 'Nessun messaggio di errore o successo disponibile';
+      let intentResult;
       if (result && result.result && result.result.alexaExecutionInfo && result.result.alexaExecutionInfo.consideredIntents && result.result.alexaExecutionInfo.consideredIntents.length > 0) {
-        message = "Intent: " + result.result.alexaExecutionInfo.consideredIntents[0].name;
-      } else if (result && result.result && result.result.error && result.result.error.message) {
+        intentResult = "Result Intent: " + result.result.alexaExecutionInfo.consideredIntents[0].name;
+      }
+      if (result && result.result && result.result.error && result.result.error.message) {
         message = "Message: " + result.result.error.message;
       } else if (result && result.result && result.result.successMessage) {
         message = "Message: " + result.result.successMessage;
       }
 
-      return `Utterance: ${utterance}\nScore: ${score}\nSeed: ${seed}\nSimulation ID: ${simulationId}\nStatus: ${status}\n${message}\n\n`;
+      return `Utterance: ${utterance}\nScore: ${score}\nSeed: ${seed}\nSimulation ID: ${simulationId}\nStatus: ${status}\n${message}\n${intentResult}\nExpectedIntent: ${expectedIntent} \n\n`;
     });
 
     const summaryFilePath = path.join(path.dirname(this.filePath), 'test_summary.txt');

@@ -5,12 +5,13 @@ export class Simulation {
   private score: number;
   private simulationId?: string;
   private simulationResult?: any;
+  private intent:string;
 
-
-  public constructor(utterance: string, seed: string, score: number) {
+  public constructor(utterance: string, seed: string, score: number,intent:string) {
     this.utterance = utterance;
     this.seed = seed;
     this.score = score;
+    this.intent=intent;
   }
 
 
@@ -52,6 +53,12 @@ export class Simulation {
   }
   public setSimulationResult(result: any) {
     this.simulationResult = result;
+  }
+  public getIntent(): string {
+    return this.intent;
+  }
+  public setIntent(value: string) {
+    this.intent = value;
   }
 
 }
