@@ -1,10 +1,10 @@
 {
   "name": "alexa-skill-test-robustness",
   "displayName": "Alexa-Skill-Test-Robustness",
-  "version": "0.0.1",
-  "description": "Descrizione dell'estensione",
-  "publisher": "il_tuo_nome_pubblicatore",
-  "id": "il_tuo_nome_pubblicatore.alexa-skill-test-robustness",
+  "version": "1.0.0",
+  "description": "Testing robustness skill",
+  "publisher": "Angelo_Conca",
+  "id": "Angelo_Conca.alexa-skill-test-robustness",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -18,7 +18,7 @@
         {
           "id": "alexaSkillTestRobustnessContainer",
           "title": "Alexa Skill Test",
-          "icon": "$(file)"
+          "icon": "./icon/noun-above-the-target-4109345.svg"
         }
       ]
     },
