@@ -49,7 +49,7 @@ export class SecondPanel {
       
 
   public dispose() {
-   // SecondPanel.context.globalState.update('TestState', true); 
+     SecondPanel.context.globalState.update('TestState', true); 
       SecondPanel.currentPanel = undefined;
   
       this._panel.dispose();
@@ -110,7 +110,7 @@ export class SecondPanel {
     }
     private async startUtteranceTesting(value:any,webview: vscode.Webview) {
       this.buttonEnable=false;
-      SecondPanel.context.globalState.update('TestState', false); 
+      SecondPanel.context.globalState.update('TestState', true); 
       this.buttonIsEnable(webview);
       try {
           const workspaceFolders = vscode.workspace.workspaceFolders;
@@ -163,7 +163,7 @@ export class SecondPanel {
   private buttonIsEnable(webview:vscode.Webview){
     webview.postMessage({
       command:'Button',
-      Boolean: SecondPanel.context.globalState.get('TestState',this.buttonEnable)
+      Boolean: SecondPanel.context.globalState.get('TestState',false)
     });
   }
   
@@ -184,7 +184,7 @@ export class SecondPanel {
             allSamples.push(...groupSorting(jsonObject));
             webview.postMessage({
               command: 'Button',
-              Boolean: SecondPanel.context.globalState.get('TestState',this.buttonEnable)
+              Boolean: SecondPanel.context.globalState.get('TestState',true)
             });
       } else {
         throw new Error("Invalid or missing JSON file structure");
