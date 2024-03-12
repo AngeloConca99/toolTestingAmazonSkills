@@ -2,9 +2,9 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { HelloWorldPanel } from "./panels/HelloWorldPanel";
+import { GenerationPanel } from "./panels/GenerationPanel";
 import { InfoProvider } from './InfoProvider';
-import { SecondPanel } from './panels/SecondPanel';
+import { TestingPanel } from './panels/TestingPanel';
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 // file: src/extension.ts
@@ -22,15 +22,15 @@ export function activate(context: vscode.ExtensionContext) {
 		}),
 
 		vscode.commands.registerCommand("alexa-skill-test-robustness.GenerationPanel", () => {
-			HelloWorldPanel.render(context.extensionUri, context);
+			GenerationPanel.render(context.extensionUri, context);
 		}),
 
 		vscode.commands.registerCommand("alexa-skill-test-robustness.TestingPanel",  (arg) => {
 			
 			vscode.workspace.findFiles("**/tmp/output.json", "**/node_modules/**", 1).then((files) => {
 				if (files.length > 0){
-					SecondPanel.render(context.extensionUri, context,arg);
-					SecondPanel.setFile(files[0].fsPath);
+					TestingPanel.render(context.extensionUri, context,arg);
+					TestingPanel.setFile(files[0].fsPath);
 				} else{
 					vscode.window.showErrorMessage('No \'output.json\' file found. Please generate \'output.json\' file using the skill test robustness extension.');
 				}

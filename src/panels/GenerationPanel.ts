@@ -1,4 +1,4 @@
-// file: src/panels/HelloWorldPanel.ts
+// file: src/panels/GenerationPanel.ts
 
 
 
@@ -11,8 +11,8 @@ import * as childProcess from 'child_process';
 import * as fs from 'fs/promises';
 import * as vscode from "vscode";
 
-export class HelloWorldPanel {
-  public static currentPanel: HelloWorldPanel | undefined;
+export class GenerationPanel {
+  public static currentPanel: GenerationPanel | undefined;
   private static context: vscode.ExtensionContext;
   private invocationName: string=" ";
   private readonly _panel: vscode.WebviewPanel;
@@ -26,7 +26,7 @@ export class HelloWorldPanel {
   private start: boolean = false;
 
   private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, context: vscode.ExtensionContext) {
-    HelloWorldPanel.context = context;
+    GenerationPanel.context = context;
     this._panel = panel;
     this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
     this._panel.webview.html = this._getWebviewContent(this._panel.webview, extensionUri);
@@ -35,8 +35,8 @@ export class HelloWorldPanel {
   }
 
   public static render(extensionUri: vscode.Uri, context: vscode.ExtensionContext) {
-    if (HelloWorldPanel.currentPanel) {
-      HelloWorldPanel.currentPanel._panel.reveal(vscode.ViewColumn.Two);
+    if (GenerationPanel.currentPanel) {
+      GenerationPanel.currentPanel._panel.reveal(vscode.ViewColumn.Two);
     } else {
       const panel = vscode.window.createWebviewPanel("alexa-skill-test-robustness", "Skill Test Robustness", vscode.ViewColumn.Two, {
         // Enable javascript in the webview
@@ -45,24 +45,24 @@ export class HelloWorldPanel {
         // localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'out')]
       });
 
-      HelloWorldPanel.currentPanel = new HelloWorldPanel(panel, extensionUri, context);
+      GenerationPanel.currentPanel = new GenerationPanel(panel, extensionUri, context);
     }
   }
   private handleActiveEditorChange = (editor: vscode.TextEditor | undefined) => {
-    if (!HelloWorldPanel.currentPanel) {
+    if (!GenerationPanel.currentPanel) {
       return;
     }
 
   
-    const isWebviewFocused = HelloWorldPanel.currentPanel._panel.visible;
+    const isWebviewFocused = GenerationPanel.currentPanel._panel.visible;
 
-    HelloWorldPanel.currentPanel._panel.webview.postMessage({
+    GenerationPanel.currentPanel._panel.webview.postMessage({
       command: isWebviewFocused ? 'webviewLostFocus' : 'webviewGainedFocus'
     });
   };
 
   public dispose() {
-    HelloWorldPanel.currentPanel = undefined;
+    GenerationPanel.currentPanel = undefined;
 
     this._panel.dispose();
 
@@ -124,7 +124,7 @@ export class HelloWorldPanel {
 
   private CreateTxtFile(text: any, webview: vscode.Webview) {
     this.start = true;
-    HelloWorldPanel.context.globalState.update('startState', this.start);
+    GenerationPanel.context.globalState.update('startState', this.start);
 
     try {
         const workspaceFolders = vscode.workspace.workspaceFolders;
@@ -212,9 +212,9 @@ export class HelloWorldPanel {
                 try {
                     await this.filteredGenerated();
                     this.start = false;
-                    HelloWorldPanel.context.globalState.update('startState', this.start);
+                    GenerationPanel.context.globalState.update('startState', this.start);
                     webview.postMessage({ command: 'filteredFinished' });
-                    this.invocationName = HelloWorldPanel.context.globalState.get('invocationName', this.invocationName);
+                    this.invocationName = GenerationPanel.context.globalState.get('invocationName', this.invocationName);
                     vscode.commands.executeCommand('alexa-skill-test-robustness.TestingPanel', this.invocationName);
                     resolve();
                 } catch (innerError) {
@@ -258,7 +258,7 @@ export class HelloWorldPanel {
         if (fileJsonObject && fileJsonObject.interactionModel && fileJsonObject.interactionModel.languageModel && fileJsonObject.interactionModel.languageModel.intents) {
           let invocationName =fileJsonObject.interactionModel.languageModel.invocationName;
           this.invocationName=invocationName.toString();
-           HelloWorldPanel.context.globalState.update('invocationName', this.invocationName);
+           GenerationPanel.context.globalState.update('invocationName', this.invocationName);
               allSamples.push(...fileJsonObject.interactionModel.languageModel.intents);
         } else {
           throw new Error("Invalid or missing JSON file structure");
@@ -326,7 +326,7 @@ export class HelloWorldPanel {
               this.runScript(`java -jar ${quoteSpaces(absoluteScriptPath)} ${quoteSpaces(this.TextFilePath)} ${quoteSpaces(this.outputPath)}`, webview);
             break;
           case 'buttonEnable':
-             this.start = HelloWorldPanel.context.globalState.get('startState', false);
+             this.start = GenerationPanel.context.globalState.get('startState', false);
             await webview.postMessage({
               command: 'button',
               Boolean: this.start
@@ -344,6 +344,6 @@ export class HelloWorldPanel {
   }
   private saveInvocationName(text){
     this.invocationName=text;
-    HelloWorldPanel.context.globalState.update('invocationName', this.invocationName);
+    GenerationPanel.context.globalState.update('invocationName', this.invocationName);
   }
 }

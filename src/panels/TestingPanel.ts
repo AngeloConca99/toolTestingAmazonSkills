@@ -1,4 +1,4 @@
-// file: src/panels/SecondPanel.ts
+// file: src/panels/TestingPanel.ts
 
 
 
@@ -9,9 +9,9 @@ import * as childProcess from 'child_process';
 import * as fs from 'fs/promises';
 import * as vscode from "vscode";
 import { groupSorting } from "../utilities/groupSorting";
-import  {AlexaUtteranceTester} from'./../utilities/AlexaUtteranceTester';
-export class SecondPanel {
-    public static currentPanel: SecondPanel | undefined;
+import  {AlexaUtteranceTester} from'../utilities/AlexaUtteranceTester';
+export class TestingPanel {
+    public static currentPanel: TestingPanel | undefined;
     public static context: vscode.ExtensionContext;
     public readonly _panel: vscode.WebviewPanel;
     private invocationName:string;
@@ -22,7 +22,7 @@ export class SecondPanel {
     
 
     private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, context: vscode.ExtensionContext) {
-        SecondPanel.context = context;
+        TestingPanel.context = context;
         this._panel = panel;
         this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
         this._panel.webview.html = this._getWebviewContent(this._panel.webview, extensionUri);
@@ -34,23 +34,23 @@ export class SecondPanel {
            invocation_name = context.globalState.get('invocationName', 'defaultInvocationName');
          }
       
-        if (SecondPanel.currentPanel) {
-          SecondPanel.currentPanel._panel.reveal(vscode.ViewColumn.Two);
+        if (TestingPanel.currentPanel) {
+          TestingPanel.currentPanel._panel.reveal(vscode.ViewColumn.Two);
         } else {
           const panel = vscode.window.createWebviewPanel("alexa-skill-test-robustness", "Skill Test Robustness", vscode.ViewColumn.One, {
             enableScripts: true,
           });
       
-          SecondPanel.currentPanel = new SecondPanel(panel, extensionUri, context);
+          TestingPanel.currentPanel = new TestingPanel(panel, extensionUri, context);
         }
         this.invocationName = invocation_name;
-        SecondPanel.context.globalState.update('invocationName', invocation_name);
+        TestingPanel.context.globalState.update('invocationName', invocation_name);
       }
       
 
   public dispose() {
-     SecondPanel.context.globalState.update('TestState', true); 
-      SecondPanel.currentPanel = undefined;
+     TestingPanel.context.globalState.update('TestState', true); 
+      TestingPanel.currentPanel = undefined;
   
       this._panel.dispose();
   
@@ -110,7 +110,7 @@ export class SecondPanel {
     }
     private async startUtteranceTesting(value:any,webview: vscode.Webview) {
       this.buttonEnable=false;
-      SecondPanel.context.globalState.update('TestState', true); 
+      TestingPanel.context.globalState.update('TestState', this.buttonEnable); 
       this.buttonIsEnable(webview);
       try {
           const workspaceFolders = vscode.workspace.workspaceFolders;
@@ -123,12 +123,12 @@ export class SecondPanel {
           const workspaceTmpPath = path.join(workspaceFolder.uri.fsPath, 'tmp');
           const filePath=path.join( workspaceTmpPath, 'output.json');
     
-      const utteranceTester = new AlexaUtteranceTester(filePath,value,SecondPanel.context.globalState.get('invocationName', " "));
+      const utteranceTester = new AlexaUtteranceTester(filePath,value,TestingPanel.context.globalState.get('invocationName', " "));
         await utteranceTester.runSimulations();
       } catch (error) {
         vscode.window.showErrorMessage(`Errore durante il test delle utterances: ${error}`);
       }
-      SecondPanel.context.globalState.update('TestState', true); 
+      TestingPanel.context.globalState.update('TestState', true); 
       this.buttonEnable=true;
       this.buttonIsEnable(webview); 
     }
@@ -150,7 +150,7 @@ export class SecondPanel {
             vscode.window.showInformationMessage(text);
             break;
           case'StartTesting':
-          SecondPanel.context.globalState.update('TestState', false);
+          TestingPanel.context.globalState.update('TestState', false);
           this.startUtteranceTesting(value,webview);
           break;
           case 'TestingButton':
@@ -163,7 +163,7 @@ export class SecondPanel {
   private buttonIsEnable(webview:vscode.Webview){
     webview.postMessage({
       command:'Button',
-      Boolean: SecondPanel.context.globalState.get('TestState',false)
+      Boolean: TestingPanel.context.globalState.get('TestState',this.buttonEnable)
     });
   }
   
@@ -174,7 +174,7 @@ export class SecondPanel {
   public async postSeed(webview: vscode.Webview) {
     try {
 
-      const jsonFile = await vscode.workspace.fs.readFile(vscode.Uri.file(SecondPanel.filePath));
+      const jsonFile = await vscode.workspace.fs.readFile(vscode.Uri.file(TestingPanel.filePath));
       const jsonString = new TextDecoder().decode(jsonFile);
       const jsonObject = JSON.parse(jsonString);
 
@@ -184,7 +184,7 @@ export class SecondPanel {
             allSamples.push(...groupSorting(jsonObject));
             webview.postMessage({
               command: 'Button',
-              Boolean: SecondPanel.context.globalState.get('TestState',true)
+              Boolean: TestingPanel.context.globalState.get('TestState',true)
             });
       } else {
         throw new Error("Invalid or missing JSON file structure");
