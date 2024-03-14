@@ -126,7 +126,7 @@ export class TestingPanel {
       const utteranceTester = new AlexaUtteranceTester(filePath,value,TestingPanel.context.globalState.get('invocationName', " "));
         await utteranceTester.runSimulations();
       } catch (error) {
-        vscode.window.showErrorMessage(`Errore durante il test delle utterances: ${error}`);
+        vscode.window.showErrorMessage(`Error while testing utterances: ${error}`);
       }
       TestingPanel.context.globalState.update('TestState', true); 
       this.buttonEnable=true;
@@ -140,6 +140,9 @@ export class TestingPanel {
         const text = message.text;
         const value = message.value;
         switch (command) {
+          case'message':
+          vscode.window.showInformationMessage(text);
+          break;
           case 'findFile':
             this.postSeed(webview);
             break;

@@ -8,7 +8,7 @@ provideVSCodeDesignSystem().register(vsCodeButton(), vsCodeOption(), vsCodeProgr
 const vscode = acquireVsCodeApi();
 
 
-let slideValueGlobal = 0;
+let slideValueGlobal = 75;
 let seeds = [];
 let seedsCopy = [];
 let  uncheckedSeeds=[];
@@ -22,6 +22,7 @@ window.addEventListener('load', main);
 window.addEventListener('load', eventListener);
 
 async function main() {
+  
   TestButton?.addEventListener('click', handleTestingClick);
   sliderValue?.addEventListener('input', setSliderValue);
   slider?.addEventListener('input', setSlider);
@@ -45,6 +46,7 @@ function eventListener() {
     const command = message.command;
     const samples = message.samples;
     const buttonEnable = message.Boolean;
+    const Value=message.value;
 
     switch (command) {
       case 'JsonFile': {
@@ -69,10 +71,10 @@ function setSamplesAndHideProgress(allSamples) {
   progressRing?.classList.add('hidden');
   createCheckbox(allSamples);
 }
-
+restoreUnselect();
 function createCheckbox(allSamples) {
   
-  restoreSeedsState();
+  
   seeds.push(...allSamples);
   seedsCopy = deepClone(allSamples);
 
@@ -150,6 +152,17 @@ function setSliderValue() {
     updateCheckboxesVisibility();
   }, 300); 
 }
+function updateSliderValue(newValue) {
+  let value = parseFloat(newValue);
+  value = Math.min(100, Math.max(0, value));
+  slideValueGlobal = value;
+  slider.value = value.toString();
+  sliderValue.value = value;
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+      updateCheckboxesVisibility();
+  }, 10);
+}
 
 function updateCheckboxesVisibility() {
   let sliderScore = parseFloat(slider.value); 
@@ -178,20 +191,26 @@ function updateCheckboxesVisibility() {
       checkbox.style.display = ''; 
     }
   });
+  saveSeedsState();
 }
 
 function saveSeedsState() {
+
   const Unselect = {
+    Slider_Value: slideValueGlobal,
     Unselect_Seed: uncheckedSeeds,
   };
-  localStorage.setItem('Unselect', JSON.stringify(seedsState));
+  localStorage.setItem('Unselect', JSON.stringify(Unselect));
 }
 
-function restoreSeedsState() {
+function restoreUnselect() {
   const savedState = localStorage.getItem('Unselect');
   if (savedState) {
-    const {Unselect_Seed: unselectSeed } = JSON.parse(savedState);
-    if (uncheckedSeed.length > 0) {
+    const {Slider_Value: sliderValue, Unselect_Seed: unselectSeed } = JSON.parse(savedState);
+    if(sliderValue){
+    slideValueGlobal = sliderValue;}
+    updateSliderValue(slideValueGlobal);
+    if (unselectSeed.length > 0) {
       uncheckedSeeds.push(...unselectSeed);
     }
 }}
