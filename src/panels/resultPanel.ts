@@ -25,15 +25,13 @@ export class resultPanel {
 
   public static render(extensionUri: vscode.Uri, context: vscode.ExtensionContext, resultTest: any) {
     if (resultPanel.currentPanel) {
-      resultPanel.currentPanel.TestResult = resultTest; 
-      resultPanel.currentPanel._panel.reveal(vscode.ViewColumn.One);
-    } else {
+      resultPanel.currentPanel._panel.dispose();}
       const panel = vscode.window.createWebviewPanel("alexa-skill-test-robustness", "Skill Test Robustness", vscode.ViewColumn.One, {
         enableScripts: true,
       });
 
       resultPanel.currentPanel = new resultPanel(panel, extensionUri, context, resultTest);
-    }
+    
   }
 
 

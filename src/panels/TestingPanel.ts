@@ -8,8 +8,8 @@ import { group } from "console";
 import { groupSorting } from "../utilities/groupSorting";
 import  {AlexaUtteranceTester} from'../utilities/AlexaUtteranceTester';
 
-export class SavePanel {
-  public static currentPanel: SavePanel | undefined;
+export class TestingPanel {
+  public static currentPanel: TestingPanel | undefined;
   public static context: vscode.ExtensionContext;
   public readonly _panel: vscode.WebviewPanel;
   private _disposables: vscode.Disposable[] = [];
@@ -19,7 +19,7 @@ export class SavePanel {
   private id=0;
 
   private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, context: vscode.ExtensionContext) {
-      SavePanel.context = context;
+      TestingPanel.context = context;
       this._panel = panel;
       this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
       this._panel.webview.html = this._getWebviewContent(this._panel.webview, extensionUri);
@@ -30,8 +30,8 @@ export class SavePanel {
       if (!invocation_name) {
           invocation_name = context.globalState.get('invocationName', 'defaultInvocationName');
       }
-      if (SavePanel.currentPanel) {
-          SavePanel.currentPanel._panel.reveal(vscode.ViewColumn.Two);
+      if (TestingPanel.currentPanel) {
+          TestingPanel.currentPanel._panel.reveal(vscode.ViewColumn.Two);
       } else {
           const panel = vscode.window.createWebviewPanel("alexa-skill-test-robustness", "Skill Test Robustness", vscode.ViewColumn.Two, {
               enableScripts: true,
@@ -40,13 +40,13 @@ export class SavePanel {
           
           context.globalState.update('invocationName', invocation_name);
 
-          SavePanel.currentPanel = new SavePanel(panel, extensionUri, context);
+          TestingPanel.currentPanel = new TestingPanel(panel, extensionUri, context);
       }
   }
 
   public dispose() {
-    SavePanel.context.globalState.update('TestState', true); 
-     SavePanel.currentPanel = undefined;
+    TestingPanel.context.globalState.update('TestState', true); 
+     TestingPanel.currentPanel = undefined;
   
       this._panel.dispose();
   
@@ -123,7 +123,7 @@ export class SavePanel {
             vscode.window.showInformationMessage(text);
             break;
           case'StartTesting':
-          SavePanel.context.globalState.update('TestState', false);
+          TestingPanel.context.globalState.update('TestState', false);
           console.log( "cacca"+value);
           this.startUtteranceTesting(value,webview);
           break;
@@ -134,14 +134,14 @@ export class SavePanel {
           this.CreateJsonFile(value,webview);
           break;
           case 'AddTest':
-          vscode.commands.executeCommand('alexa-skill-test-robustness.SavePanel', this.invocationName);
+          vscode.commands.executeCommand('alexa-skill-test-robustness.TestingPanel', this.invocationName);
           break;
          case'nameSkill':
-         SavePanel.context.globalState.update('skillName', message.text);
+         TestingPanel.context.globalState.update('skillName', message.text);
          console.log("sadd"+message.text);
          break;
          case'skillName':
-         webview.postMessage({command:'skillNameSelected',text:SavePanel.context.globalState.get('skillName'," ")});
+         webview.postMessage({command:'skillNameSelected',text:TestingPanel.context.globalState.get('skillName'," ")});
          break;
          case'ResultSimulation':
          console.log("non funziona "+message.value);
@@ -188,7 +188,7 @@ export class SavePanel {
   }
   private async startUtteranceTesting(value:any,webview: vscode.Webview) {
     this.buttonEnable=false;
-    SavePanel.context.globalState.update('TestState', this.buttonEnable); 
+    TestingPanel.context.globalState.update('TestState', this.buttonEnable); 
     this.buttonIsEnable(webview);
     try {
         const workspaceFolders = vscode.workspace.workspaceFolders;
@@ -202,19 +202,19 @@ export class SavePanel {
         const filePath=path.join( workspaceTmpPath, 'output.json');
         
   
-    const utteranceTester = new AlexaUtteranceTester(filePath,value,SavePanel.context.globalState.get('invocationName', " "),webview,SavePanel.context.globalState.get('skillName'," "));
+    const utteranceTester = new AlexaUtteranceTester(filePath,value,TestingPanel.context.globalState.get('invocationName', " "),webview,TestingPanel.context.globalState.get('skillName'," "));
       await utteranceTester.runSimulations();
     } catch (error) {
       vscode.window.showErrorMessage(`Error while testing utterances: ${error}`);
     }
-    SavePanel.context.globalState.update('TestState', true); 
+    TestingPanel.context.globalState.update('TestState', true); 
     this.buttonEnable=true;
     this.buttonIsEnable(webview); 
   }
   private buttonIsEnable(webview:vscode.Webview){
     webview.postMessage({
       command:'Button',
-      Boolean: SavePanel.context.globalState.get('TestState',this.buttonEnable)
+      Boolean: TestingPanel.context.globalState.get('TestState',this.buttonEnable)
     });
   }
   
@@ -225,7 +225,7 @@ export class SavePanel {
   public async postSeed(webview: vscode.Webview) {
     try {
 
-      const jsonFile = await vscode.workspace.fs.readFile(vscode.Uri.file (SavePanel.filePath));
+      const jsonFile = await vscode.workspace.fs.readFile(vscode.Uri.file (TestingPanel.filePath));
       const jsonString = new TextDecoder().decode(jsonFile);
       const jsonObject = JSON.parse(jsonString);
 
