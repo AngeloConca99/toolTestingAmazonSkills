@@ -4,8 +4,8 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { GenerationPanel } from "./panels/GenerationPanel";
 import { InfoProvider } from './InfoProvider';
-import { TestingPanel } from './panels/TestingPanel';
-import { savePanel } from './panels/SavePanel';
+import { TestingPanel } from './panels/SavePanel';
+import { savePanel } from './panels/TestingPanel';
 import { resultPanel } from './panels/resultPanel';
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
