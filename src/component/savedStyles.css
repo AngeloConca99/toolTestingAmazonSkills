@@ -22,7 +22,6 @@
   .slider-container {
     display: flex;
     align-items: center;
-    /* position: relative; */
     width: 100%;
     margin: 10px;
     margin-bottom: 20px;
@@ -35,7 +34,6 @@
     background-color: var(--vscode-editorWidget-background);
     border: 1px solid var(--vscode-button-background);
     position: relative;
-    
     transform: translateX(-50%);
   }
   
@@ -46,6 +44,19 @@
     border: none;
     border-radius: 5px;
     outline: none;
+    position: relative; /* Assicurati che l'input range sia posizionato relativamente per il pseudo-elemento */
+  }
+  
+  input[type="range"]::before {
+    content: '';
+    position: absolute;
+    top: -8px; 
+    left: 75%; 
+    width: 20px;
+    height: 20px;
+    background-color: red; 
+    border-radius: 50%; 
+    transform: translateX(-50%); 
   }
   input[type="number"].highlight {
     width: 40px;
@@ -68,9 +79,10 @@
   }
   
   .slider-container label {
-    text-align:center;
+    text-align: center;
     margin-right: 30px;
   }
+  
   
   #start{
     width: 100%;
