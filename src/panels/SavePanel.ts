@@ -171,7 +171,7 @@ export class SavePanel {
       vscode.window.showErrorMessage("An error occurred shile saving the file: " + error.message);
     }
     SavePanel.context.globalState.update('TestState', true);
-    vscode.commands.executeCommand('alexa-skill-test-robustness.SavePanel', this.invocationName);
+    vscode.commands.executeCommand('alexa-skill-test-robustness.TestingPanel', this.invocationName);
   }
 
 

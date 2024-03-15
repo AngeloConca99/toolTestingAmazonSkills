@@ -134,7 +134,7 @@ export class TestingPanel {
           this.CreateJsonFile(value,webview);
           break;
           case 'AddTest':
-          vscode.commands.executeCommand('alexa-skill-test-robustness.TestingPanel', this.invocationName);
+          vscode.commands.executeCommand('alexa-skill-test-robustness.SavePanel', this.invocationName);
           break;
          case'nameSkill':
          TestingPanel.context.globalState.update('skillName', message.text);
