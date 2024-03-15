@@ -89,7 +89,7 @@ export class GenerationPanel {
            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; font-src ${webview.cspSource}; img-src ${webview.cspSource} https:; script-src 'nonce-${nonce}';">
            <link rel="stylesheet" type="text/css" href="${stylesUri}">
-           <title>Hello World</title>
+           <title>Generation Panel</title>
          </head>
          <body>
            ${displayHtmlContent}
@@ -122,7 +122,7 @@ export class GenerationPanel {
     }
   }
 
-  private CreateTxtFile(text: any, webview: vscode.Webview) {
+  private CreateJsonFile(text: any, webview: vscode.Webview) {
     this.start = true;
     GenerationPanel.context.globalState.update('startState', this.start);
 
@@ -134,7 +134,7 @@ export class GenerationPanel {
         }
 
         const workspaceFolder = workspaceFolders[0];
-        this.workspaceTmpPath = path.join(workspaceFolder.uri.fsPath, 'tmp');
+        this.workspaceTmpPath = path.join(workspaceFolder.uri.fsPath, 'GenerateSeeds');
         this.outputPath = path.join(this.workspaceTmpPath, 'output');
         const folderPath = this.workspaceTmpPath;
         const fileName = 'input.json';
@@ -215,7 +215,7 @@ export class GenerationPanel {
                     GenerationPanel.context.globalState.update('startState', this.start);
                     webview.postMessage({ command: 'filteredFinished' });
                     this.invocationName = GenerationPanel.context.globalState.get('invocationName', this.invocationName);
-                    vscode.commands.executeCommand('alexa-skill-test-robustness.TestingPanel', this.invocationName);
+                    vscode.commands.executeCommand('alexa-skill-test-robustness.SavePanel', this.invocationName);
                     resolve();
                 } catch (innerError) {
                     vscode.window.showErrorMessage("Error after executing the script: " + innerError.message);
@@ -244,27 +244,28 @@ export class GenerationPanel {
     });
 
   }
-
   private async postSeed(webview: vscode.Webview) {
     try {
-      const jsonFile = await this.findFilesWithTimeout('**/skill-package/interactionModels/custom/en-US.json', '**/node_modules/**', 1, this.timeoutMillis);
+      const jsonFiles = await this.findFilesWithTimeout('**/skill-package/interactionModels/custom/en-US.json', '**/node_modules/**', 1, this.timeoutMillis);
+      if (jsonFiles.length === 0) {
+        throw new Error("JSON file not found.");
+      }
+      const jsonFileUri = jsonFiles[0];
       let allSamples = [];
-
-    
-        const jsonFileContent = await vscode.workspace.fs.readFile(jsonFileUri);
-        const jsonString = new TextDecoder().decode(jsonFileContent);
-        const fileJsonObject = JSON.parse(jsonString);
-        
-        if (fileJsonObject && fileJsonObject.interactionModel && fileJsonObject.interactionModel.languageModel && fileJsonObject.interactionModel.languageModel.intents) {
-          let invocationName =fileJsonObject.interactionModel.languageModel.invocationName;
-          this.invocationName=invocationName.toString();
-           GenerationPanel.context.globalState.update('invocationName', this.invocationName);
-              allSamples.push(...fileJsonObject.interactionModel.languageModel.intents);
-        } else {
-          throw new Error("Invalid or missing JSON file structure");
-        }
+  
+      const jsonFileContent = await vscode.workspace.fs.readFile(jsonFileUri);
+      const jsonString = new TextDecoder().decode(jsonFileContent);
+      const fileJsonObject = JSON.parse(jsonString);
       
-
+      if (fileJsonObject && fileJsonObject.interactionModel && fileJsonObject.interactionModel.languageModel && fileJsonObject.interactionModel.languageModel.intents) {
+        let invocationName = fileJsonObject.interactionModel.languageModel.invocationName;
+        this.invocationName = invocationName.toString();
+        GenerationPanel.context.globalState.update('invocationName', this.invocationName);
+        allSamples.push(...fileJsonObject.interactionModel.languageModel.intents);
+      } else {
+        throw new Error("Invalid or missing JSON file structure");
+      }
+  
       if (allSamples.length === 0) {
         throw new Error("No seeds found in JSON file intents.");
       } else {
@@ -274,8 +275,8 @@ export class GenerationPanel {
       vscode.window.showErrorMessage("Error loading file: " + error.message);
       webview.postMessage({ command: 'JsonFileNotFound' });
     }
-
   }
+  
   private async showQuickPick(array): Promise<string | undefined> {
     const intent = await vscode.window.showQuickPick(array, {
       placeHolder: "Choose an intent"
@@ -320,7 +321,7 @@ export class GenerationPanel {
             vscode.window.showErrorMessage(text);
             break;
           case 'createTxtFile':
-            this.CreateTxtFile(text, webview);
+            this.CreateJsonFile(text, webview);
             break;
           case 'VUI-UPSET':
               this.runScript(`java -jar ${quoteSpaces(absoluteScriptPath)} ${quoteSpaces(this.TextFilePath)} ${quoteSpaces(this.outputPath)}`, webview);

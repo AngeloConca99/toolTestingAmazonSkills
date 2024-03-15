@@ -42,9 +42,19 @@
       },
 
       {
+        "command": "alexa-skill-test-robustness.savePanel",
+        "title": "savePanel Panel"
+      },
+      {
         "command": "alexa-skill-test-robustness.TestingPanel",
         "title": "Testing Panel"
+      },
+      {
+        "command": "alexa-skill-test-robustness.resultPanel",
+        "title": " "
       }
+      
+
     ]
   },
   "scripts": {

@@ -13,12 +13,31 @@ export class AlexaUtteranceTester {
   private skillId: string | null = null;
   private utterances: string[] = [];
   private simulations: Simulation[] = [];
+  private webview:vscode.Webview;
+  private skillName:string;
 
-  constructor(filePath: string,value:any, invocationName: string) {
+  constructor(filePath: string,value:any, invocationName: string,webview:vscode.Webview,skillName:String) {
     this.filePath = filePath;
     this.invocationName = invocationName;
     this.sentence=value;
+    this.webview=webview;
+    this.skillName=skillName;
+    console.log(skillName);
+    console.log(invocationName);
   }
+  public async runSkill() {
+    try {
+        if (!this.skillId) {
+            throw new Error("Skill ID is not set. Cannot invoke skill without Skill ID.");
+        }
+        const command = `ask smapi simulate-skill -s ${this.skillId}  --input-content "open ${this.invocationName}" --device-locale en-US ''`;
+        const output = await this.executeCommand(command);
+
+    } catch (error) {
+        throw error;
+    }
+}
+
   private loadUtterances(): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
@@ -40,13 +59,12 @@ export class AlexaUtteranceTester {
   
  
 
-  public generateTestSummaryFile(): void {
+  public async generateTestSummaryFile(): void {
     let passed=0;
     let failed=0;
 
     const summaryLines = this.simulations.map(simulation => {
       const utterance = simulation.getUtterance();
-      const score = simulation.getScore()*100;
       const seed = simulation.getSeed();
       const simulationId = simulation.getSimulationId();
       const expectedIntent=simulation.getIntent();
@@ -75,14 +93,20 @@ export class AlexaUtteranceTester {
         passed++;
       }
 
-      return `Utterance: ${utterance}\nScore: ${score}\nSeed: ${seed}\nSimulation ID: ${simulationId}\nStatus: ${status}\n${message}\n${intentResult}\nExpectedIntent: ${expectedIntent} \n\n`;
+      return `Utterance: ${utterance}\nSeed: ${seed}\nSimulation ID: ${simulationId}\nStatus: ${status}\n${message}\n${intentResult}\nExpectedIntent: ${expectedIntent} \n\n`;
     });
     vscode.window.showInformationMessage("Test Passed: "+passed+"Test Failed: "+ failed );
-    const summaryFilePath = path.join(path.dirname(this.filePath), 'test_summary.txt');
+    const date = new Date();
+    const dateString = date.toISOString().replace(/:/g, '-'); 
+    let summaryFileName = `test_summary_${dateString}.txt`;
+    let summaryDir = path.dirname(this.filePath); 
+    let summaryFilePath = path.join(summaryDir, summaryFileName);
 
-    fs.writeFileSync(summaryFilePath, summaryLines.join(''));
-    vscode.window.showInformationMessage(`Test summary file saved in: ${summaryFilePath}`);
-  }
+    if (!fs.existsSync(summaryDir)) {
+        await fs.promises.mkdir(summaryDir, { recursive: true });
+    }
+    await fs.promises.writeFile(summaryFilePath, summaryLines.join(''));
+    vscode.window.showInformationMessage(`Test summary file saved in: ${summaryFilePath}`);}
 
 
 
@@ -92,16 +116,22 @@ export class AlexaUtteranceTester {
       const out = await this.executeCommand('ask smapi list-skills-for-vendor');
       const response = JSON.parse(out);
       const skills = response.skills;
-      const foundSkill = skills.find(skill => skill.nameByLocale['en-US'] === this.invocationName);
+      const foundSkill = skills.find(skill => skill.nameByLocale['en-US'] === this.skillName);
       if (foundSkill) {
         this.skillId = foundSkill.skillId;
       } else {
+        this.webview.postMessage({
+          command:'idNotFound',
+        });
         throw new Error('Skill ID not found');
       }
     } catch (error) {
+   
       const errorMessage = `Error while searching for Skill ID or parsing output: ${error.message}`;
       throw errorMessage;
+      
     }
+
   }
   private async simulateUtterance(simulation: Simulation, retryCount = 0): Promise<void> {
     if (!this.skillId) {
@@ -129,30 +159,40 @@ export class AlexaUtteranceTester {
     }
   }
   
-
   private async fetchSimulationResults(): Promise<void> {
     let simulationResults = [];
     for (const simulation of this.simulations) {
+        const simulationId = simulation.getSimulationId();
+        const expectedIntent = simulation.getIntent();
+        
+        try {
+            const command = `ask smapi get-skill-simulation --simulation-id ${simulationId} --skill-id ${this.skillId}`;
+            const result = await this.executeCommand(command);
+            const parsedResult = JSON.parse(result);
+            
 
-      const simulationId = simulation.getSimulationId();
-      if (!simulationId) {
-        continue;
-      }
+            let actualIntent = "";
+            if (parsedResult && parsedResult.result && parsedResult.result.alexaExecutionInfo && parsedResult.result.alexaExecutionInfo.consideredIntents && parsedResult.result.alexaExecutionInfo.consideredIntents.length > 0) {
+                actualIntent = parsedResult.result.alexaExecutionInfo.consideredIntents[0].name;
+            }
 
-      try {
-        const command = `ask smapi get-skill-simulation --simulation-id ${simulationId} --skill-id ${this.skillId}`;
-        const result = await this.executeCommand(command);
-        const parsedResult = JSON.parse(result);
-        simulation.setSimulationResult(parsedResult);
-        simulationResults.push(parsedResult);
-      } catch (error) {
-        const errorMessage=`Error getting result for simulation ${simulationId}: ${error}`;
-        throw new Error(errorMessage);
-      }
+            const status = (expectedIntent === actualIntent) ? 'Success' : 'Failed';
+            parsedResult.status = status;
+           
+            simulation.setSimulationResult(parsedResult);
+            this.webview.postMessage({
+              command:'Result',
+              value:simulation.getUtterance().toString(),
+              text:status,
+              simulation:simulation
+            });
+            
+        } catch (error) {
+            const errorMessage = `Error getting result for simulation ${simulationId}: ${error}`;
+            throw new Error(errorMessage);
+        }
     }
-    const resultsFilePath = path.join(path.dirname(this.filePath), 'simulation_results.json');
-    await fs.promises.writeFile(resultsFilePath, JSON.stringify(simulationResults, null, 2));
-  }
+}
 
 
 
@@ -175,11 +215,14 @@ export class AlexaUtteranceTester {
         cancellable: false
     }, async (progress) => {
         try {
+          
             progress.report({ message: "Loading utterances..." });
             await this.loadUtterances();
-
+           
             progress.report({ message: "Finding Skill ID..." });
+            
             await this.findSkillId();
+            await this.runSkill();
 
             progress.report({ message: "Waiting for simulations to complete..." });
 

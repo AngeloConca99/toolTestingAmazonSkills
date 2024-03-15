@@ -19,8 +19,6 @@ let startButtonDisable = true;
 let slideValueGlobal = 0;
 const startButton = document.getElementById('start');
 const resetButton = document.getElementById('reset');
-// const slider = document.getElementById('slider') as Slider;
-// const sliderValue = document.getElementById('sliderValue') as slidevalue;
 
 
 
@@ -33,14 +31,8 @@ async function main() {
   startButton?.addEventListener('click', handleStartClick);
   addSeed?.addEventListener('click', createInsertedCheckbox);
   input?.addEventListener('input', handleFileSelect);
-  // const resetButton = document.getElementById('reset');
+ 
   resetButton?.addEventListener('click', resetSeeds);
-  // sliderValue.addEventListener('input', sliderValueSet);
-  // slider.addEventListener('input', sliderSet);
-  // sliderValue?.attributes.setNamedItem(document.createAttribute('value'));
-  // slider?.attributes.setNamedItem(document.createAttribute('value'));
-  // slider.value = slideValueGlobal.toString();
-  // sliderValue.value = slideValueGlobal;
  restoreSeedsState();
 }
 

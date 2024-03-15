@@ -30,6 +30,7 @@ async function main() {
   slider?.attributes.setNamedItem(document.createAttribute('value'));
   slider.value = slideValueGlobal.toString();
   sliderValue.value = slideValueGlobal;
+  restoreUnselect();
   vscode.postMessage({ command: 'findFile' });
 }
 
@@ -39,7 +40,17 @@ function handleTestingClick() {
     value: seedsCopy
   });
 }
+function updateInputStyle() {
+  const value = parseInt(slider.value, 10);
 
+  slider?.classList.remove("highlight");
+  sliderValue?.classList.remove("highlight");
+
+  if (value === 75) {
+    slider?.classList.add("highlight");
+    sliderValue?.classList.add("highlight");
+  }
+}
 function eventListener() {
   window.addEventListener('message', event => {
     const message = event.data;
@@ -71,9 +82,8 @@ function setSamplesAndHideProgress(allSamples) {
   progressRing?.classList.add('hidden');
   createCheckbox(allSamples);
 }
-restoreUnselect();
+
 function createCheckbox(allSamples) {
-  
   
   seeds.push(...allSamples);
   seedsCopy = deepClone(allSamples);
@@ -109,14 +119,16 @@ function createCheckbox(allSamples) {
         if(!uncheckedSeeds.includes(seed.generate)){
           uncheckedSeeds.push(seed.generate);
         }
+        saveSeedsState();
       } else {
         seedsCopy.push(seed);
-        let indexun = uncheckedSeeds.indexOf(seed);
+        let indexun = uncheckedSeeds.indexOf(seed.generate);
         if (indexun > -1) {
           uncheckedSeeds.splice(indexun, 1);
         }
+        saveSeedsState();
       }
-      saveSeedsState();
+      
     });
     if (index % 2 === 0) {
       leftContainer?.appendChild(checkbox);
@@ -132,6 +144,7 @@ function setSlider() {
   slideValueGlobal = slider.value;
   sliderValue.value = slider.value;
   clearTimeout(debounceTimer);
+  updateInputStyle();
   debounceTimer = setTimeout(() => {
     updateCheckboxesVisibility();
   }, 300);
@@ -146,7 +159,7 @@ function setSliderValue() {
   sliderValue.value = value;
   slideValueGlobal = value;
   slider.value = value.toString();
-
+  updateInputStyle();
   clearTimeout(sliderTimeout);
   sliderTimeout = setTimeout(() => {
     updateCheckboxesVisibility();

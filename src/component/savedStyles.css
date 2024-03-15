@@ -10,13 +10,12 @@
   
   vscode-checkbox {
     display: flex;
+    flex-grow: 1;
     align-items: center;
     margin-bottom: 5px;
   }
   
-  vscode-checkbox input[type="checkbox"] {
-    margin-right: 5px;
-  }
+
   
   /* id and class elements */
   
@@ -48,6 +47,16 @@
     border-radius: 5px;
     outline: none;
   }
+  input[type="number"].highlight {
+    width: 40px;
+    text-align: left;
+    color: red;
+    border-color: red;
+    background-color: var(--vscode-editorWidget-background);
+    border: 1px solid var(--vscode-button-background);
+    position: relative;
+    transform: translateX(-50%);
+  }
   
   input[type="range"]::-webkit-slider-thumb {
     width: 10px;
@@ -65,7 +74,13 @@
   
   #start{
     width: 100%;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
+    margin-left: 10px;
+    align-self: center;
+  }
+  #addTest{
+    width: 100%;
+    margin-bottom: 15px;
     margin-left: 10px;
     align-self: center;
   }
@@ -73,6 +88,7 @@
   #container {
     display: flex;
     justify-content: space-between;
+
   }
   
   .left-container {
@@ -92,12 +108,6 @@
     text-align: center;
   }
   
-  .seed-container {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: relative;
-  }
   
   .vscode-text-area {
     flex-grow: 1;
@@ -129,3 +139,51 @@
   .hidden {
     display: none;
   }
+  .seed-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.result-area.invisible-button {
+  background: none;
+    border: none;
+    
+    cursor: pointer;
+    min-width: 100px;
+    padding: 5px;
+    display: flex;
+    justify-content: center; 
+    align-items: center;
+}
+
+.test-button {
+    margin-right: 10px;
+    cursor: pointer; 
+}
+.test-result-success {
+  font-size: 40px;
+  color: green; 
+}
+
+.test-result-failed {
+  font-size: 40px;
+  color: #e57373;
+}
+#saveName{
+  margin-bottom: 30px;
+}
+.result-entry {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-bottom: 10px;
+  overflow: auto; 
+}
+
+.result-entry div {
+  margin: 5px 0;
+}
+#resultsContainer {
+  margin-top: 50px;
+}
