@@ -22,8 +22,6 @@ export class AlexaUtteranceTester {
     this.sentence=value;
     this.webview=webview;
     this.skillName=skillName;
-    console.log(skillName);
-    console.log(invocationName);
   }
   public async runSkill() {
     try {
@@ -243,7 +241,6 @@ export class AlexaUtteranceTester {
             await this.generateTestSummaryFile();
 
         } catch (error) {
-            console.error(error);
             vscode.window.showErrorMessage(`Error running simulations: ${error}`);
         }
     });

@@ -136,7 +136,8 @@ function createCheckbox(allSamples) {
       rightContainer?.appendChild(checkbox);
     }});
     TestIsEnable();
-    
+    updateCheckboxesVisibility();
+   
 }
 let debounceTimer;
 

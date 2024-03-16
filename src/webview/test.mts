@@ -199,8 +199,10 @@ function createCheckbox(allSamples) {
                 testButton.style.display = '';
                 editButton.textContent = 'Edit';
                 isEditing = false; 
-        
+                
             }
+            resultArea.id=seed.generate;
+
         });
         seedContainer.appendChild(editButton);
 

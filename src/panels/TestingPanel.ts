@@ -72,7 +72,7 @@ export class TestingPanel {
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; font-src ${webview.cspSource}; img-src ${webview.cspSource} https:; script-src 'nonce-${nonce}';">
           <link rel="stylesheet" type="text/css" href="${stylesUri}">
-          <title>Second Hello</title>
+          <title>Testing Panel</title>
         </head>
         <body>
           ${displayHtmlContent}
@@ -124,7 +124,6 @@ export class TestingPanel {
             break;
           case'StartTesting':
           TestingPanel.context.globalState.update('TestState', false);
-          console.log( "cacca"+value);
           this.startUtteranceTesting(value,webview);
           break;
           case 'TestingButton':
@@ -135,16 +134,15 @@ export class TestingPanel {
           break;
           case 'AddTest':
           vscode.commands.executeCommand('alexa-skill-test-robustness.SavePanel', this.invocationName);
+          this.dispose();
           break;
          case'nameSkill':
          TestingPanel.context.globalState.update('skillName', message.text);
-         console.log("sadd"+message.text);
          break;
          case'skillName':
          webview.postMessage({command:'skillNameSelected',text:TestingPanel.context.globalState.get('skillName'," ")});
          break;
          case'ResultSimulation':
-         console.log("non funziona "+message.value);
          vscode.commands.executeCommand('alexa-skill-test-robustness.resultPanel', message.value);
          break;
 

@@ -62,7 +62,7 @@ export class resultPanel {
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; font-src ${webview.cspSource}; img-src ${webview.cspSource} https:; script-src 'nonce-${nonce}';">
           <link rel="stylesheet" type="text/css" href="${stylesUri}">
-          <title>Second Hello</title>
+          <title>Result Panel</title>
         </head>
         <body>
           ${displayHtmlContent}
