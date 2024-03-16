@@ -33,21 +33,21 @@
     "commands": [
       {
         "command": "alexa-skill-test-robustness.GenerationPanel",
-        "title": "Generation Panel"
+        "title": "alexa-skill-test-robustness.GenerationPanel"
       },
       
       {
         "command": "alexa-skill-test-robustness.openReadme",
-        "title": "README"
+        "title": "alexa-skill-test-robustness.openReadme"
       },
 
       {
         "command": "alexa-skill-test-robustness.savePanel",
-        "title": "savePanel Panel"
+        "title": "alexa-skill-test-robustness.savePanel"
       },
       {
         "command": "alexa-skill-test-robustness.TestingPanel",
-        "title": "Testing Panel"
+        "title": "alexa-skill-test-robustness.TestingPanel"
       },
       {
         "command": "alexa-skill-test-robustness.resultPanel",
