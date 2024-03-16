@@ -137,7 +137,7 @@ private CreateTextFile(text: any, webview: vscode.Webview) {
       const folderPath = path.join(workspaceFolder.uri.fsPath, 'Result-Test');
       const date = new Date();
       const dateString = date.toISOString().split('T')[0]; 
-      const fileName = `ResultTest-${dateString}.txt`;
+      const fileName = `ResultTest-${this.TestResult.utterance}-${dateString}.txt`;
       
       const jsonString = typeof text === 'string' ? text : JSON.stringify(text, null, 2);
       
