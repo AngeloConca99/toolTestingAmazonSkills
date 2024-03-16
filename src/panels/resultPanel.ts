@@ -115,9 +115,46 @@ export class resultPanel {
               command:'result',
               value:this.TestResult
             });
-            break;  
+            break;
+            case'save':
+            this.CreateTextFile(this.TestResult);
+            break;
           }
         }
       );
     }
+private CreateTextFile(text: any, webview: vscode.Webview) {
+  this.start = true;
+
+  try {
+      const workspaceFolders = vscode.workspace.workspaceFolders;
+      if (!workspaceFolders || workspaceFolders.length === 0) {
+          vscode.window.showErrorMessage("Workspace folder not found");
+          return;
+      }
+
+      const workspaceFolder = workspaceFolders[0];
+      const folderPath = path.join(workspaceFolder.uri.fsPath, 'Result-Test');
+      const date = new Date();
+      const dateString = date.toISOString().split('T')[0]; 
+      const fileName = `ResultTest-${dateString}.txt`;
+      
+      const jsonString = typeof text === 'string' ? text : JSON.stringify(text, null, 2);
+      
+      this.saveFileInFolder(jsonString, folderPath, fileName, webview);
+  } catch (error) {
+      vscode.window.showErrorMessage("Error in file creation: " + error.message);
+  }
+}
+
+private saveFileInFolder(content: string, folderPath: string, fileName: string, webview: vscode.Webview) {
+  const fullPath = vscode.Uri.file(path.join(folderPath, fileName));
+  const contentBuffer = Buffer.from(content, 'utf8');
+  try {
+    vscode.workspace.fs.writeFile(fullPath, contentBuffer);
+    vscode.window.showInformationMessage("File successfully saved in :"+fullPath);
+  } catch (error) {
+    vscode.window.showErrorMessage("An error occurred shile saving the file: " + error.message);
+  }
+}
 }

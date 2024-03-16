@@ -231,6 +231,7 @@ function updateSeeds(seed, newSeedText) {
   let seedIndex = seeds.findIndex(s => s === seed);
   if (seedIndex > -1) {
       seeds[seedIndex].generate = newSeedText;
+      seed[seedIndex].score=0;
   }
   seedIndex = seedsCopy.findIndex(s => s.generate === seed.generate && s.intent === seed.intent);
   if (seedIndex > -1) {

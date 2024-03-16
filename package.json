@@ -18,7 +18,7 @@
         {
           "id": "alexaSkillTestRobustnessContainer",
           "title": "Alexa Skill Test",
-          "icon": "./icon/noun-above-the-target-4109345.svg"
+          "icon": "./icon/skillTesting.svg"
         }
       ]
     },
@@ -51,8 +51,7 @@
       },
       {
         "command": "alexa-skill-test-robustness.resultPanel",
-        "title": " ",
-        "category": "Alexa Skill Test Robustness"
+        "title": " qwertyuhgjdsjhadvjk"
       }
       
 

@@ -9,16 +9,19 @@ const vscode = acquireVsCodeApi();
 
 window.addEventListener('load', main);
 window.addEventListener('load', eventListener);
+const saveButton = document.getElementById('start');
 
 async function main() {
     vscode.postMessage({
         command:'main'
     });
+    saveButton?.addEventListener('click', handleSaveClick);
 }
-
-
-
-
+function handleSaveClick(){
+  vscode.postMessage({
+    command:'save'
+});
+}
 
 function eventListener(){
     window.addEventListener('message', event => {
