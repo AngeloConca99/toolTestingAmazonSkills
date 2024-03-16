@@ -190,9 +190,10 @@ function createCheckbox(allSamples) {
             } else {
                 const newSeedText = editArea.value;
                 if (newSeedText.length > 0) {
+                  if(newSeedText!==seed.generate){
                     seed.generate = newSeedText;
                     checkbox.textContent = newSeedText + " (" + seed.intent + ")";
-                    updateSeeds(seed, newSeedText);
+                    updateSeeds(seed, newSeedText);}
                 }
                 editArea.style.display = 'none';
                 checkbox.style.display = '';
