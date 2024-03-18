@@ -5,8 +5,7 @@ import * as childProcess from 'child_process';
 import * as fs from 'fs/promises';
 import * as vscode from "vscode";
 import { groupSorting } from "../utilities/groupSorting";
-import { SavePanel } from "./TestingPanel";
-
+import  {TestingPanel} from "./TestingPanel";
 export class SavePanel {
     public static currentPanel: SavePanel | undefined;
     public static context: vscode.ExtensionContext;
@@ -14,6 +13,7 @@ export class SavePanel {
     private invocationName:string;
     private _disposables: vscode.Disposable[] = [];
     private buttonEnable:boolean=false;
+    private TextFilePath:string;
 
     private static filePath : string;
     
@@ -131,11 +131,31 @@ export class SavePanel {
           case 'TestingButton':
             this.buttonIsEnable(webview);
             break;
+          case 'Del':
+            this.deleteTest();
         }
       }
     );
   }
-  private CreateJsonFile(text: any, webview: vscode.Webview) {
+  private deleteTest() {
+    TestingPanel.currentPanel?.dispose();
+    vscode.workspace.findFiles("**/SkillTestSaved/saved.json", "**/node_modules/**", 1).then((files) => {
+        if (files.length > 0) {
+            const fileUri = files[0];
+            vscode.workspace.fs.delete(fileUri, { recursive: false, useTrash: true })
+                .then(() => {
+                    vscode.window.showInformationMessage('The \'saved.json\' file was successfully deleted.');
+                })
+                .catch((error) => {
+                    vscode.window.showErrorMessage('An error occurred while deleting the file: ' + error.message);
+                });
+        } else {
+            vscode.window.showErrorMessage('No \'saved.json\' file found. Please generate \'saved.json\' file using Save Panel.');
+        }
+    });
+}
+
+  private async CreateJsonFile(text: any, webview: vscode.Webview) {
     this.start = true;
 
     try {
@@ -146,33 +166,55 @@ export class SavePanel {
         }
 
         const workspaceFolder = workspaceFolders[0];
-        this.workspaceTmpPath = path.join(workspaceFolder.uri.fsPath, 'SkillTestSaved');
-        this.outputPath = path.join(this.workspaceTmpPath, 'output');
-        const folderPath = this.workspaceTmpPath;
+        const folderPath =  path.join(workspaceFolder.uri.fsPath, 'SkillTestSaved');
         const fileName = 'saved.json';
-        this.TextFilePath = path.join(this.workspaceTmpPath, fileName);
+        this.TextFilePath = path.join(folderPath, fileName);
         
         
         const jsonString = typeof text === 'string' ? text : JSON.stringify(text, null, 2);
         
-        this.saveFileInFolder(jsonString, folderPath, fileName, webview);
+        await this.saveFileInFolder(jsonString, folderPath, fileName, webview);
+        vscode.commands.executeCommand('alexa-skill-test-robustness.TestingPanel', this.invocationName);
     } catch (error) {
         vscode.window.showErrorMessage("Error in file creation: " + error.message);
     }
 }
 
-  private saveFileInFolder(content: string, folderPath: string, fileName: string, webview: vscode.Webview) {
-    const fullPath = vscode.Uri.file(path.join(folderPath, fileName));
-    const contentBuffer = Buffer.from(content, 'utf8');
-    try {
-      vscode.workspace.fs.writeFile(fullPath, contentBuffer);
+private async saveFileInFolder(content: string, folderPath: string, fileName: string, webview: vscode.Webview) {
+  const fullPath = vscode.Uri.file(path.join(folderPath, fileName));
+
+  try {
+
+      const existingContent = await vscode.workspace.fs.readFile(fullPath);
+      const existingArray = JSON.parse(existingContent.toString());
+
+      const newArray = JSON.parse(content);
+
+      newArray.forEach(newItem => {
+          const exists = existingArray.some(existingItem => 
+              existingItem.intent === newItem.intent && 
+              existingItem.seed === newItem.seed &&
+              existingItem.generate === newItem.generate);
+          if (!exists) {
+              existingArray.push(newItem);
+          }
+      });
+      const updatedContent = JSON.stringify(existingArray, null, 2);
+      const contentBuffer = Buffer.from(updatedContent, 'utf8');
+      await vscode.workspace.fs.writeFile(fullPath, contentBuffer);
       vscode.window.showInformationMessage("File successfully saved");
-    } catch (error) {
-      vscode.window.showErrorMessage("An error occurred shile saving the file: " + error.message);
-    }
-    SavePanel.context.globalState.update('TestState', true);
-    vscode.commands.executeCommand('alexa-skill-test-robustness.TestingPanel', this.invocationName);
+  } catch (error) {
+      if (error.code === 'FileNotFound') {
+          const contentBuffer = Buffer.from(content, 'utf8');
+          await vscode.workspace.fs.writeFile(fullPath, contentBuffer);
+          vscode.window.showInformationMessage("File successfully saved");
+      } else {
+          vscode.window.showErrorMessage("An error occurred while saving the file: " + error.message);
+      }
   }
+  SavePanel.context.globalState.update('TestState', true);
+}
+
 
 
 

@@ -64,6 +64,7 @@ export class AlexaUtteranceTester {
     const summaryLines = this.simulations.map(simulation => {
       const utterance = simulation.getUtterance();
       const seed = simulation.getSeed();
+      const score=simulation.getScore()*100;
       const simulationId = simulation.getSimulationId();
       const expectedIntent=simulation.getIntent();
       let result = simulation.getSimulationResult();
@@ -91,7 +92,7 @@ export class AlexaUtteranceTester {
         passed++;
       }
 
-      return `Utterance: ${utterance}\nSeed: ${seed}\nSimulation ID: ${simulationId}\nStatus: ${status}\n${message}\n${intentResult}\nExpectedIntent: ${expectedIntent} \n\n`;
+      return `Utterance: ${utterance}\nSeed: ${score}\nSeed: ${seed}\nSimulation ID: ${simulationId}\nStatus: ${status}\n${message}\n${intentResult}\nExpectedIntent: ${expectedIntent} \n\n`;
     });
     vscode.window.showInformationMessage("Test Passed: "+passed+"Test Failed: "+ failed );
     const date = new Date();
@@ -104,9 +105,29 @@ export class AlexaUtteranceTester {
         await fs.promises.mkdir(summaryDir, { recursive: true });
     }
     await fs.promises.writeFile(summaryFilePath, summaryLines.join(''));
-    vscode.window.showInformationMessage(`Test summary file saved in: ${summaryFilePath}`);}
+    vscode.window.showInformationMessage(`Test summary file saved in: ${summaryFilePath}`);
+    await this.limitSummaryFiles(summaryDir, 5);
+  }
 
 
+
+  private async limitSummaryFiles(directoryPath: string, limit: number): Promise<void> {
+    const files = await fs.promises.readdir(directoryPath, { withFileTypes: true });
+    const summaryFiles = files
+        .filter(file => file.isFile() && file.name.startsWith('test_summary_'))
+        .map(file => ({
+            name: file.name,
+            path: path.join(directoryPath, file.name),
+            ctime: fs.statSync(path.join(directoryPath, file.name)).ctime
+        }));
+    summaryFiles.sort((a, b) => a.ctime.getTime() - b.ctime.getTime());
+    if (summaryFiles.length > limit) {
+        const filesToDelete = summaryFiles.slice(0, summaryFiles.length - limit);
+        for (const file of filesToDelete) {
+            await fs.promises.unlink(file.path);
+        }
+    }
+}
 
 
   private async findSkillId(): Promise<void> {

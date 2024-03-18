@@ -3,6 +3,7 @@ import {
     vsCodeOption, vsCodeProgressRing, vsCodeTextArea, ProgressRing, vsCodeCheckbox
   } from "@vscode/webview-ui-toolkit";
 import { text } from "stream/consumers";
+import { calculateCosineSimilarity } from "../utilities/cosineSimilarity.js";
 
 
 provideVSCodeDesignSystem().register(vsCodeButton(), vsCodeOption(), vsCodeProgressRing(), vsCodeCheckbox(), vsCodeTextArea());
@@ -232,7 +233,7 @@ function updateSeeds(seed, newSeedText) {
   let seedIndex = seeds.findIndex(s => s === seed);
   if (seedIndex > -1) {
       seeds[seedIndex].generate = newSeedText;
-      seeds[seedIndex].score=0;
+      seeds[seedIndex].score=calculateCosineSimilarity(seeds[seedIndex].generate,seeds[seedIndex].seed);
   }
   seedIndex = seedsCopy.findIndex(s => s.generate === seed.generate && s.intent === seed.intent);
   if (seedIndex > -1) {
@@ -243,6 +244,9 @@ function updateSeeds(seed, newSeedText) {
     value: seeds
   });
 }
+
+
+
 function saveSeedsState() {
   const buttonStates = [];
   document.querySelectorAll('.result-area').forEach(button => {

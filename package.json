@@ -42,7 +42,7 @@
       },
 
       {
-        "command": "alexa-skill-test-robustness.savePanel",
+        "command": "alexa-skill-test-robustness.SavePanel",
         "title": "alexa-skill-test-robustness.savePanel"
       },
       {

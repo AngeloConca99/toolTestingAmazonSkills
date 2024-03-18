@@ -50,10 +50,10 @@
   input[type="range"]::before {
     content: '';
     position: absolute;
-    top: -8px; 
-    left: 75%; 
-    width: 20px;
-    height: 20px;
+    top: -4px; 
+    left: 74%; 
+    width: 12px;
+    height: 12px;
     background-color: red; 
     border-radius: 50%; 
     transform: translateX(-50%); 

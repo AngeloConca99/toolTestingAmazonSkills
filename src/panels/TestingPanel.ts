@@ -31,17 +31,15 @@ export class TestingPanel {
           invocation_name = context.globalState.get('invocationName', 'defaultInvocationName');
       }
       if (TestingPanel.currentPanel) {
-          TestingPanel.currentPanel._panel.reveal(vscode.ViewColumn.Two);
-      } else {
+          TestingPanel.currentPanel.dispose();
+      }
           const panel = vscode.window.createWebviewPanel("alexa-skill-test-robustness", "Skill Test Robustness", vscode.ViewColumn.Two, {
               enableScripts: true,
           });
 
           
           context.globalState.update('invocationName', invocation_name);
-
           TestingPanel.currentPanel = new TestingPanel(panel, extensionUri, context);
-      }
   }
 
   public dispose() {
@@ -234,7 +232,6 @@ export class TestingPanel {
       } else {
         throw new Error("Invalid or missing JSON file structure");
       }
-      // }
 
       if (allSamples.length === 0) {
         throw new Error("No seeds found in JSON file intents.");

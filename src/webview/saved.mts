@@ -17,6 +17,7 @@ const sliderValue = document.getElementById('sliderValue');
 
 const TestButton = document.getElementById('Test');
 const contentDiv = document.getElementById('content');
+const delButton=document.getElementById('Del');
 
 window.addEventListener('load', main);
 window.addEventListener('load', eventListener);
@@ -24,14 +25,21 @@ window.addEventListener('load', eventListener);
 async function main() {
   
   TestButton?.addEventListener('click', handleTestingClick);
+  delButton?.addEventListener('click',handleDelClick);
   sliderValue?.addEventListener('input', setSliderValue);
   slider?.addEventListener('input', setSlider);
   sliderValue?.attributes.setNamedItem(document.createAttribute('value'));
   slider?.attributes.setNamedItem(document.createAttribute('value'));
   slider.value = slideValueGlobal.toString();
   sliderValue.value = slideValueGlobal;
+  updateInputStyle();
   restoreUnselect();
   vscode.postMessage({ command: 'findFile' });
+}
+function handleDelClick(){
+  vscode.postMessage({
+    command: 'Del'
+  });
 }
 
 function handleTestingClick() {
@@ -173,6 +181,7 @@ function updateSliderValue(newValue) {
   slider.value = value.toString();
   sliderValue.value = value;
   clearTimeout(debounceTimer);
+  updateInputStyle();
   debounceTimer = setTimeout(() => {
       updateCheckboxesVisibility();
   }, 10);
