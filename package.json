@@ -1,10 +1,10 @@
 {
   "name": "alexa-skill-test-robustness",
-  "displayName": "Alexa-Skill-Test-Robustness",
+  "displayName": "SkillForge",
   "version": "1.0.0",
   "description": "Testing robustness skill",
   "publisher": "Angelo_Conca",
-  "id": "Angelo_Conca.alexa-skill-test-robustness",
+  "id": "Angelo_Conca.SkillForge",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -33,21 +33,21 @@
     "commands": [
       {
         "command": "alexa-skill-test-robustness.GenerationPanel",
-        "title": "alexa-skill-test-robustness.GenerationPanel"
+        "title": "SkillForge.GenerationPanel"
       },
       
       {
         "command": "alexa-skill-test-robustness.openReadme",
-        "title": "alexa-skill-test-robustness.openReadme"
+        "title": "SkillForge.openReadme"
       },
 
       {
         "command": "alexa-skill-test-robustness.SavePanel",
-        "title": "alexa-skill-test-robustness.savePanel"
+        "title": "SkillForge.savePanel"
       },
       {
         "command": "alexa-skill-test-robustness.TestingPanel",
-        "title": "alexa-skill-test-robustness.TestingPanel"
+        "title": "SkillForge.TestingPanel"
       },
       {
         "command": "alexa-skill-test-robustness.resultPanel",
