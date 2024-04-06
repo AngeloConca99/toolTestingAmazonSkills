@@ -233,7 +233,7 @@ private async saveFileInFolder(content: string, folderPath: string, fileName: st
   private buttonIsEnable(webview:vscode.Webview){
     webview.postMessage({
       command:'Button',
-      Boolean: SavePanel.context.globalState.get('TestState',this.buttonEnable)
+      Boolean: SavePanel.context.globalState.get('TestState',true)
     });
   }
   

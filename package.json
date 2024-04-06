@@ -1,5 +1,5 @@
 {
-  "name": "alexa-skill-test-robustness",
+  "name": "SkillForge",
   "displayName": "SkillForge",
   "version": "1.0.0",
   "description": "Testing robustness skill",
@@ -17,7 +17,7 @@
       "activitybar": [
         {
           "id": "alexaSkillTestRobustnessContainer",
-          "title": "Alexa Skill Test",
+          "title": "SkillForge",
           "icon": "./icon/skillTesting.svg"
         }
       ]
@@ -26,7 +26,7 @@
       "alexaSkillTestRobustnessContainer": [
         {
           "id": "alexaSkillTestRobustnessView",
-          "name": "Test Overview"
+          "name": "Overview"
         }
       ]
     },
