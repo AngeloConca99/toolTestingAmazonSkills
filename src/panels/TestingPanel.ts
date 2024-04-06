@@ -58,7 +58,6 @@ export class TestingPanel {
   }
 
   private _getWebviewContent(webview: vscode.Webview, extensionUri: vscode.Uri): string {
-      const displayHtmlContent = this.getDisplayHtmlContent(webview, extensionUri);
   const webviewUri = getUri(webview, extensionUri, ["out", "test.js"]);
   const stylesUri = this.getCss(webview, extensionUri);
   const nonce = getNonce();
@@ -73,7 +72,23 @@ export class TestingPanel {
           <title>Testing Panel</title>
         </head>
         <body>
-          ${displayHtmlContent}
+        <h1>Test Panel</h1>
+
+
+        <vscode-button id="addTest">ADD TEST</vscode-button>
+        <vscode-button id="start">START ALL TEST</vscode-button>
+        
+        <div id="all">
+            <div id="container">
+                <div class="left-container">
+                    <label id="insertedLabel">insert skill name :</label>
+                    <vscode-text-area id="insertedTextContent" resize="none" rows="1" cols="50" autofocus="true">
+                    </vscode-text-area>
+                    <vscode-button id="saveName">Save Name</vscode-button>
+                </div>
+            </div>
+            <vscode-progress-ring id="progressRing2"></vscode-progress-ring>
+        </div>
           <script type="module" nonce="${nonce}" src="${webviewUri}"></script>
         </body>
       </html>
@@ -81,17 +96,7 @@ export class TestingPanel {
     `;
   }
 
-  private getDisplayHtmlContent(webview: vscode.Webview, extensionUri: vscode.Uri): string {
-    const fs = require('fs');
-    const path = require('path');
-    try {
-      const htmlPath = path.join(extensionUri.fsPath, "src", "component", "testdisplay.html");
-      const displayHtmlContent = fs.readFileSync(htmlPath, 'utf-8');
-      return displayHtmlContent;
-    } catch (error) {
-      throw new Error("Error retrieving HTML content");
-        }
-    }
+
 
   private getCss(webview: vscode.Webview, extensionUri: vscode.Uri): vscode.Uri {
       try {

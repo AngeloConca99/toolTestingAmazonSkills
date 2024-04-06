@@ -50,7 +50,6 @@ export class resultPanel {
   }
 
   private _getWebviewContent(webview: vscode.Webview, extensionUri: vscode.Uri): string {
-      const displayHtmlContent = this.getDisplayHtmlContent(webview, extensionUri);
   const webviewUri = getUri(webview, extensionUri, ["out", "result.js"]);
   const stylesUri = this.getCss(webview, extensionUri);
   const nonce = getNonce();
@@ -65,7 +64,18 @@ export class resultPanel {
           <title>Result Panel</title>
         </head>
         <body>
-          ${displayHtmlContent}
+        <div id="container">
+    
+        <div class="left-container">
+            <div id="content"></div>
+        </div>
+        
+        <div class="right-container">
+            <div id="insertedContent"></div>
+        </div>
+    </div>
+    <vscode-button  id="start">Save Result</vscode-button>
+    <div id="resultsContainer"></div>
           <script type="module" nonce="${nonce}" src="${webviewUri}"></script>
         </body>
       </html>
@@ -73,17 +83,6 @@ export class resultPanel {
     `;
   }
 
-  private getDisplayHtmlContent(webview: vscode.Webview, extensionUri: vscode.Uri): string {
-    const fs = require('fs');
-    const path = require('path');
-    try {
-      const htmlPath = path.join(extensionUri.fsPath, "src", "component", "result.html");
-      const displayHtmlContent = fs.readFileSync(htmlPath, 'utf-8');
-      return displayHtmlContent;
-    } catch (error) {
-      throw new Error("Error retrieving HTML content");
-        }
-    }
 
   private getCss(webview: vscode.Webview, extensionUri: vscode.Uri): vscode.Uri {
       try {

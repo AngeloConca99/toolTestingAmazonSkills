@@ -61,7 +61,6 @@ export class SavePanel {
   }
 
   private _getWebviewContent(webview: vscode.Webview, extensionUri: vscode.Uri): string {
-      const displayHtmlContent = this.getDisplayHtmlContent(webview, extensionUri);
   const webviewUri = getUri(webview, extensionUri, ["out", "saved.js"]);
   const stylesUri = this.getCss(webview, extensionUri);
   const nonce = getNonce();
@@ -76,25 +75,36 @@ export class SavePanel {
           <title>SAVE PANEL</title>
         </head>
         <body>
-          ${displayHtmlContent}
+        <h1>Save Panel</h1>
+
+        <div class="slider-container">
+            <label>Similarity percentage</label>
+            <input type="number" id="sliderValue" min="0" max="100" step="1">
+            <input type="range" id="slider" min="0" max="100" step="1">
+        </div>
+        
+        <vscode-button id="Test">Save Test Case</vscode-button>
+        <vscode-button id="Del">Delete All Test Cases</vscode-button>
+        <div id="content"></div>
+                <div class="centered">
+                    <vscode-progress-ring id="progressRing1"></vscode-progress-ring>
+                </div>
+            </div>
+        
+        <div id="container">
+           
+            <div class="left-container">
+            </div>
+        
+            <div class="right-container">
+            </div>
+        </div>
           <script type="module" nonce="${nonce}" src="${webviewUri}"></script>
         </body>
       </html>
       <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; font-src ${webview.cspSource}; img-src ${webview.cspSource} https:; script-src 'nonce-${nonce}';">
     `;
   }
-
-  private getDisplayHtmlContent(webview: vscode.Webview, extensionUri: vscode.Uri): string {
-    const fs = require('fs');
-    const path = require('path');
-    try {
-      const htmlPath = path.join(extensionUri.fsPath, "src", "component", "secondPanel.html");
-      const displayHtmlContent = fs.readFileSync(htmlPath, 'utf-8');
-      return displayHtmlContent;
-    } catch (error) {
-      throw new Error("Error retrieving HTML content");
-        }
-    }
 
   private getCss(webview: vscode.Webview, extensionUri: vscode.Uri): vscode.Uri {
       try {

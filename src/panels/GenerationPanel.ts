@@ -77,7 +77,6 @@ export class GenerationPanel {
  
 
   private _getWebviewContent(webview: vscode.Webview, extensionUri: vscode.Uri) {
-    const displayHtmlContent = this.getDisplayHtmlContent(webview, extensionUri);
     const webviewUri = getUri(webview, extensionUri, ["out", "webview.js"]);
     const stylesUri = this.getCss(webview, extensionUri);
     const nonce = getNonce();
@@ -92,23 +91,31 @@ export class GenerationPanel {
            <title>Generation Panel</title>
          </head>
          <body>
-           ${displayHtmlContent}
+         <h1>Generate Utterance</h1>
+         <vscode-button disabled id="start">Generate</vscode-button>
+         <div id="container">
+             <div class="left-container">
+                 <vscode-button id="reset" disabled>RESET</vscode-button>
+                 <div id="content"></div>
+                 <div class="centered">
+                     <input type="file" id="fileInput" class="hidden">
+                     <vscode-progress-ring id="progressRing"></vscode-progress-ring>
+                 </div>
+             </div>
+         
+             <div class="right-container">
+                 <label id="insertedLabel">Manually inserted seed sentences:</label>
+                 <div id="insertedContent"></div>
+                 <vscode-text-area id="insertedTextContent" resize="none" rows="1" cols="50" autofocus="true">
+                 </vscode-text-area>
+                 <vscode-button id="addSeed">Add seed</vscode-button>
+             </div>
+         </div>
            <script type="module" nonce="${nonce}" src="${webviewUri}"></script>
          </body>
        </html>
        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; font-src ${webview.cspSource}; img-src ${webview.cspSource} https:; script-src 'nonce-${nonce}';">
      `;
-  }
-  private getDisplayHtmlContent(webview: vscode.Webview, extensionUri: vscode.Uri): string {
-    const fs = require('fs');
-    const path = require('path');
-    try {
-      const htmlPath = path.join(extensionUri.fsPath, "src", "component", "display.html");
-      const displayHtmlContent = fs.readFileSync(htmlPath, 'utf-8');
-      return displayHtmlContent;
-    } catch (error) {
-      throw new Error("Error retrieving HTML content");
-    }
   }
 
   private getCss(webview: vscode.Webview, extensionUri: vscode.Uri): vscode.Uri {
