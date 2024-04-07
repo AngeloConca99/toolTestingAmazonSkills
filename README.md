@@ -1,38 +1,50 @@
-# Alexa-Skill-Test-Robustness README
+# Project Overview
 
-This Visual Studio Code extension facilitates robustness testing of Alexa skills by providing an integrated web user interface for selecting, editing, and generating test phrases based on seeds.
+This repository hosts the development of two distinct Visual Studio Code extensions designed to enhance the development and testing of Alexa skills. Each extension serves a specific purpose and is maintained in separate branches to streamline their development and usage.
 
-## Key Features
+## Extensions
 
-- **Dynamic Seed Selection**: Users can select or deselect seed phrases using checkboxes. By default, all seeds are selected.
-- **Similarity Score Adjustment**: A slider allows setting a similarity score between the seed phrases and the generated phrases, ranging from 0% to 100%, to refine the relevance of the generated phrases to the original seeds.
-- **Seed Editing**: Seeds can be edited by clicking on the "Edit" button, allowing users to customize the seeds before generating phrases. This offers greater flexibility in test preparation.
-- **JSON File Generation**: At completion, the extension generates a JSON file containing the selected and edited phrases, ready to be used as input in Alexa test tools.
+### SkillForge Extension for Test Case Execution
 
-## Prerequisites
+The **SkillForge** extension is focused on facilitating the robustness testing of Alexa skills. It provides developers with a comprehensive suite of tools for generating, editing, and running test phrases against their skills to assess and improve their robustness. This extension is particularly useful for developers looking to ensure their Alexa skills respond accurately to a wide range of user inputs.
 
-- **Java JRE 8**: Java JRE 8 is required for the extension to function. Make sure it is installed and configured on your system.
-- **Node.js**: Node.js is necessary for managing the extension's dependencies and running the build process. Ensure that you have Node.js installed on your system. You can download it from [https://nodejs.org/](https://nodejs.org/).
+- **Location**: The SkillForge extension can be found in the `testing` branch of this repository.
+- **Main Features**:
+  - Dynamic selection of seed phrases for test generation.
+  - Saving and managing utterances for testing.
+  - Executing tests and analyzing results directly within Visual Studio Code.
 
-## Installation
+### Astro Extension for Phrase Enhancement
 
-1. Open a terminal or command prompt.
-2. Navigate to the root directory of the extension.
-3. Run `npm install` to install all the necessary dependencies.
+The **Astro** extension is tailored for developers who wish to expand their Alexa skill's understanding by adding more paraphrases. It aids in the enhancement of skills by making them more robust against varied phrasing of user commands. Astro provides an intuitive interface for inserting additional paraphrases directly into the skill's interaction model.
 
-## Usage
+- **Location**: The Astro extension is located in the `robustness` branch of this repository.
+- **Main Features**:
+  - Easy insertion of new paraphrases into the skill's interaction model.
+  - Streamlined workflow for updating and expanding skill interactions.
+  - Enhanced skill robustness through diversified phrase recognition.
 
-1. **Start the Extension**: Click on the extension icon in the VS Code Activity Bar to open the web user interface.
-2. **Seed Selection**: Use the checkboxes to choose the seeds from which to generate phrases.
-3. **Adjust the Similarity Score**: Set the desired similarity score between the seeds and the generated phrases using the slider.
-4. **Edit Seeds**: Click on "Edit" to customize the seeds.
-5. **Generate JSON File**: Complete the selection and editing of seeds to automatically generate a JSON file that can be used in Alexa test tools.
+## Getting Started
 
-## Available Commands
+To get started with either the SkillForge or Astro extension, follow these steps:
 
-- `alexa-skill-test-robustness.helloWorld`: Starts the main panel of the extension.
-- `alexa-skill-test-robustness.openReadme`: Opens this README file.
+1. **Clone the Repository**: Begin by cloning this repository to your local machine using your preferred Git client.
+gh repo clone AngeloConca99/toolTestingAmazonSkills
 
-## Contributing
+2. **Switch to the Relevant Branch**: Depending on the extension you wish to use, switch to the appropriate branch.
+- For SkillForge:
+  ```
+  git checkout testing
+  ```
+- For Astro:
+  ```
+  git checkout robustness
+  ```
+3. **Follow the Installation Instructions**: Each branch contains a specific `README.md` file with detailed installation and usage instructions for the respective extension.
 
-Contributions and suggestions to improve this extension are welcome. Open issues or pull requests on the project's GitHub repository for any enhancements or feedback.
+
+## Support
+
+If you encounter any issues or have questions regarding the usage of these extensions, please file an issue in this repository, specifying the extension in question.
+
+Thank you for supporting the development of tools that enhance the robustness and versatility of Alexa skills.
