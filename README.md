@@ -16,7 +16,7 @@ This Visual Studio Code extension facilitates the robustness testing of Alexa sk
 
 - **GenerateSeeds**: Contains the input file and output for VUI-UpSet.
 - **SkillTestSaved**: Stores the selected utterances on which the tests will be performed.
-- **Result-Test**: Contains the tests that have been decided to save.
+- **Result-Test**: Contains the test results that were decided to be saved
 - **TestResult**: Collects the summary of the tests performed.
 
 ## Extension User Manual
@@ -44,8 +44,7 @@ The **Testing Panel** provides the functionality to run tests on saved utterance
 In the **Results Panel**, users can examine the outcome of each test case. This panel provides immediate feedback on the effectiveness of the tested skills, with the ability to access additional details directly from the testing panel. This feature proves to be an indispensable tool for developers, allowing them to quickly identify areas for improvement in their Alexa skills.
 
 ### Prerequisites
-
-Before you can use the "SkillForge" extension in Visual Studio Code, you must meet some essential prerequisites to ensure the correct functioning of the development environment. This section provides details on how to install and configure the required components.
+Before you can use the "SkillForge" extension in Visual Studio Code, you must meet some essential prerequisites to ensure the development environment works correctly. This section provides details on how to install and configure the required components.
 
 #### Node.js
 
@@ -65,11 +64,12 @@ If necessary, Java JRE 8 can be downloaded from the [official Oracle website](ht
 
 ## Downloading and Installing the Extension
 
-Once the prerequisites are met, installing the "SkillForge" extension can be completed by following a series of simple but fundamental steps. The first operation is to go to the project's release page, available on the dedicated GitHub repository for the extension. This page can be found at [https://github.com/AngeloConca99/toolTestingAmazonSkills/releases/download/1.0.1/SkillForge-1.0.0.vsix](https://github.com/AngeloConca99/toolTestingAmazonSkills/releases/download/1.0.1/SkillForge-1.0.0.vsix).
+Downloading and Installing the Extension
+Once the prerequisites are met, installing the "SkillForge" extension can be completed by following a series of simple but fundamental steps. For the first operation, head to this project's release page, available [here](https://github.com/AngeloConca99/toolTestingAmazonSkills/releases/download/1.0.1/SkillForge-1.0.0.vsix).
 
-Upon reaching the release page, you can view all the extension versions published so far. Each release is accompanied by a brief description of the features introduced or bugs resolved, allowing you to consciously choose the most suitable version for your needs. The download procedure involves selecting the SkillForge.vsix file corresponding to the desired release. The download starts by directly clicking on the file name, saving it in an easily accessible folder on your computer.
+Upon reaching the release page, you can view all the versions of the extension published so far. Each release is accompanied by a brief description of the features introduced or bugs resolved, allowing you to consciously choose the most suitable version for your needs. The download procedure involves selecting the SkillForge.vsix file corresponding to the desired release. The download starts by directly clicking on the file name, saving it in an easily accessible folder on your computer.
 
-With the .vsix file downloaded, installation becomes a breeze. Open Visual Studio Code and direct attention to the Extensions section, easily accessible via the Ctrl+Shift+X key combination. Within this area of Visual Studio Code, there is an icon representing three vertical dots, located in the upper right corner. Clicking on this icon opens a contextual menu where you select the "Install from VSIX..." option. A dialogue window opens, allowing you to navigate the folders on your computer in search of the previously downloaded .vsix file. Selecting the file and confirming initiates the installation of the extension, which will be completed in a few seconds.
+WWith the .vsix file downloaded, installation becomes a breeze. Open Visual Studio Code and pay attention to the Extensions section, easily accessible via the Ctrl+Shift+X key combination. Within this area of Visual Studio Code, there is an icon representing three vertical dots, located in the upper right corner. Clicking on this icon opens a contextual menu where you select the "Install from VSIX..." option. A dialogue window opens, allowing you to navigate the folders on your computer in search of the previously downloaded .vsix file. Selecting the file and confirming initiates the installation of the extension, which will be completed in a few seconds.
 
 
 ## Available Commands
@@ -81,4 +81,4 @@ With the .vsix file downloaded, installation becomes a breeze. Open Visual Studi
 
 ## Contributing
 
-Contributions and suggestions to improve this extension are welcome. Open issues or pull requests on the project's GitHub repository for any enhancements or feedback.
+Contributions and suggestions to improve this extension are welcome. Feel free to open issues or pull requests for any enhancements or feedback.
