@@ -25,7 +25,7 @@ export class TestingPanel {
       this._panel.webview.html = this._getWebviewContent(this._panel.webview, extensionUri);
       this._setWebviewMessageListener(this._panel.webview);
   }
-
+//
   public static render(extensionUri: vscode.Uri, context: vscode.ExtensionContext, invocation_name?: string) {
       if (!invocation_name) {
           invocation_name = context.globalState.get('invocationName', 'defaultInvocationName');
