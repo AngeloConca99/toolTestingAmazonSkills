@@ -66,7 +66,20 @@ const savedCss={
   entryPoints: ["./src/component/savedStyles.css"],
   outdir:"./out"
 };
-
+const saveConfig = {
+  ...baseConfig,
+  target: "es2020",
+  format: "esm",
+  entryPoints: ["./src/webview/test.mts"],
+  outfile: "./out/test.js"
+};
+const resultConfig = {
+  ...baseConfig,
+  target: "es2020",
+  format: "esm",
+  entryPoints: ["./src/webview/result.mts"],
+  outfile: "./out/result.js"
+};
 
 const buildExtension = async () => {
   await build(extensionConfig);};
@@ -81,6 +94,12 @@ const buildCSS = async () => {
 const buildSaved = async () => {
   await build(savedConfig);
 };
+const buildSave = async () => {
+  await build(saveConfig);
+};
+const buildResult = async () => {
+  await build(resultConfig);
+};
 
 const buildSavedCss = async () => {
   await build(savedCss);
@@ -94,6 +113,8 @@ const buildAll = async () => {
     await buildWebview();
     await buildCSS();
     await buildSaved();
+    await buildSave();
+    await buildResult();
     await buildSavedCss();
 };
 

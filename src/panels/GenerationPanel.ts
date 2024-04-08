@@ -1,18 +1,20 @@
-// file: src/panels/HelloWorldPanel.ts
-
+// file: src/panels/GenerationPanel.ts
+//
 
 
 import { getUri } from "../utilities/getUri";
 import { getNonce } from "../utilities/getNonce";
 import { quoteSpaces } from "../utilities/quoteSpaces";
+
 import * as path from 'path';
 import * as childProcess from 'child_process';
 import * as fs from 'fs/promises';
 import * as vscode from "vscode";
 
-export class HelloWorldPanel {
-  public static currentPanel: HelloWorldPanel | undefined;
+export class GenerationPanel {
+  public static currentPanel: GenerationPanel | undefined;
   private static context: vscode.ExtensionContext;
+  private invocationName: string=" ";
   private readonly _panel: vscode.WebviewPanel;
   private _disposables: vscode.Disposable[] = [];
   
@@ -20,12 +22,11 @@ export class HelloWorldPanel {
   private workspaceTmpPath: string = '';
   private outputPath: string = '';
   private TextFilePath: string = '';
-  private ScoreSeed: number = 0;
-  private invocationName: string = "";
+  
   private start: boolean = false;
 
   private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, context: vscode.ExtensionContext) {
-    HelloWorldPanel.context = context;
+    GenerationPanel.context = context;
     this._panel = panel;
     this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
     this._panel.webview.html = this._getWebviewContent(this._panel.webview, extensionUri);
@@ -34,8 +35,8 @@ export class HelloWorldPanel {
   }
 
   public static render(extensionUri: vscode.Uri, context: vscode.ExtensionContext) {
-    if (HelloWorldPanel.currentPanel) {
-      HelloWorldPanel.currentPanel._panel.reveal(vscode.ViewColumn.Two);
+    if (GenerationPanel.currentPanel) {
+      GenerationPanel.currentPanel._panel.reveal(vscode.ViewColumn.Two);
     } else {
       const panel = vscode.window.createWebviewPanel("alexa-skill-test-robustness", "Skill Test Robustness", vscode.ViewColumn.Two, {
         // Enable javascript in the webview
@@ -44,25 +45,24 @@ export class HelloWorldPanel {
         // localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'out')]
       });
 
-      HelloWorldPanel.currentPanel = new HelloWorldPanel(panel, extensionUri, context);
+      GenerationPanel.currentPanel = new GenerationPanel(panel, extensionUri, context);
     }
   }
   private handleActiveEditorChange = (editor: vscode.TextEditor | undefined) => {
-    if (!HelloWorldPanel.currentPanel) {
+    if (!GenerationPanel.currentPanel) {
       return;
     }
 
-    // Verifica se il pannello del webview è attualmente visibile
-    const isWebviewFocused = HelloWorldPanel.currentPanel._panel.visible;
+  
+    const isWebviewFocused = GenerationPanel.currentPanel._panel.visible;
 
-    // Invia un messaggio appropriato al webview
-    HelloWorldPanel.currentPanel._panel.webview.postMessage({
+    GenerationPanel.currentPanel._panel.webview.postMessage({
       command: isWebviewFocused ? 'webviewLostFocus' : 'webviewGainedFocus'
     });
   };
 
   public dispose() {
-    HelloWorldPanel.currentPanel = undefined;
+    GenerationPanel.currentPanel = undefined;
 
     this._panel.dispose();
 
@@ -74,9 +74,9 @@ export class HelloWorldPanel {
     }
 
   }
+ 
 
   private _getWebviewContent(webview: vscode.Webview, extensionUri: vscode.Uri) {
-    const displayHtmlContent = this.getDisplayHtmlContent(webview, extensionUri);
     const webviewUri = getUri(webview, extensionUri, ["out", "webview.js"]);
     const stylesUri = this.getCss(webview, extensionUri);
     const nonce = getNonce();
@@ -88,26 +88,34 @@ export class HelloWorldPanel {
            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; font-src ${webview.cspSource}; img-src ${webview.cspSource} https:; script-src 'nonce-${nonce}';">
            <link rel="stylesheet" type="text/css" href="${stylesUri}">
-           <title>Hello World</title>
+           <title>Generation Panel</title>
          </head>
          <body>
-           ${displayHtmlContent}
+         <h1>Generate Utterance</h1>
+         <vscode-button disabled id="start">Generate</vscode-button>
+         <div id="container">
+             <div class="left-container">
+                 <vscode-button id="reset" disabled>RESET</vscode-button>
+                 <div id="content"></div>
+                 <div class="centered">
+                     <input type="file" id="fileInput" class="hidden">
+                     <vscode-progress-ring id="progressRing"></vscode-progress-ring>
+                 </div>
+             </div>
+         
+             <div class="right-container">
+                 <label id="insertedLabel">Manually inserted seed sentences:</label>
+                 <div id="insertedContent"></div>
+                 <vscode-text-area id="insertedTextContent" resize="none" rows="1" cols="50" autofocus="true">
+                 </vscode-text-area>
+                 <vscode-button id="addSeed">Add seed</vscode-button>
+             </div>
+         </div>
            <script type="module" nonce="${nonce}" src="${webviewUri}"></script>
          </body>
        </html>
        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; font-src ${webview.cspSource}; img-src ${webview.cspSource} https:; script-src 'nonce-${nonce}';">
      `;
-  }
-  private getDisplayHtmlContent(webview: vscode.Webview, extensionUri: vscode.Uri): string {
-    const fs = require('fs');
-    const path = require('path');
-    try {
-      const htmlPath = path.join(extensionUri.fsPath, "src", "component", "display.html");
-      const displayHtmlContent = fs.readFileSync(htmlPath, 'utf-8');
-      return displayHtmlContent;
-    } catch (error) {
-      throw new Error("Error retrieving HTML content");
-    }
   }
 
   private getCss(webview: vscode.Webview, extensionUri: vscode.Uri): vscode.Uri {
@@ -121,9 +129,9 @@ export class HelloWorldPanel {
     }
   }
 
-  private CreateTxtFile(text: any, webview: vscode.Webview) {
+  private CreateJsonFile(text: any, webview: vscode.Webview) {
     this.start = true;
-    HelloWorldPanel.context.globalState.update('startState', this.start);
+    GenerationPanel.context.globalState.update('startState', this.start);
 
     try {
         const workspaceFolders = vscode.workspace.workspaceFolders;
@@ -133,7 +141,7 @@ export class HelloWorldPanel {
         }
 
         const workspaceFolder = workspaceFolders[0];
-        this.workspaceTmpPath = path.join(workspaceFolder.uri.fsPath, 'tmp');
+        this.workspaceTmpPath = path.join(workspaceFolder.uri.fsPath, 'GenerateSeeds');
         this.outputPath = path.join(this.workspaceTmpPath, 'output');
         const folderPath = this.workspaceTmpPath;
         const fileName = 'input.json';
@@ -172,7 +180,7 @@ export class HelloWorldPanel {
       const jsonData = JSON.parse(data);
 
 
-      const filteredData = jsonData.filter((item: any) => item.score >= this.ScoreSeed);
+      const filteredData = jsonData;
 
       await fs.writeFile(outputPath, JSON.stringify(filteredData, null, 2));
 
@@ -189,36 +197,45 @@ export class HelloWorldPanel {
     }
 
   }
-
   private runScript(command: string, webview: vscode.Webview) {
-    try {
-      if (!this.workspaceTmpPath) {
-        vscode.window.showErrorMessage("Temporary folder not found");
-        return;
-      }
+    vscode.window.withProgress({
+        location: vscode.ProgressLocation.Notification,
+        title: "Executing script...",
+        cancellable: false // Imposta su false se l'operazione non può essere annullata
+    }, async (progress) => {
+        return new Promise<void>((resolve, reject) => {
+            if (!this.workspaceTmpPath) {
+                vscode.window.showErrorMessage("Temporary folder not found");
+                return reject(new Error("Temporary folder not found"));
+            }
 
+            childProcess.exec(command, async (error, stdout, stderr) => {
+                if (error) {
+                    vscode.window.showErrorMessage("Error while executing the script: " + error.message);
+                    return reject(error);
+                }
+                vscode.window.showInformationMessage("Script successfully executed. Output saved in " + this.outputPath);
 
-      childProcess.exec(command, async (error, stdout, stderr) => {
-        if (error) {
-          vscode.window.showErrorMessage("Error while executing the script: " + error.message);
-          return;
-        }
-        vscode.window.showInformationMessage("Script successfully executed. Output saved in " + this.outputPath);
-
-
-        await this.filteredGenerated();
-        this.start = false;
-        HelloWorldPanel.context.globalState.update('startState', this.start);
-        webview.postMessage({ command: 'filteredFinished' });
-        vscode.commands.executeCommand('alexa-skill-test-robustness.secondPanel');
-        //SecondPanel.setInputFilePath(inputPath);
-      });
-    } catch (error) {
-      vscode.window.showErrorMessage("Error while executing the script: " + error.message);
-    }
-  }
-
-
+                try {
+                    await this.filteredGenerated();
+                    this.start = false;
+                    GenerationPanel.context.globalState.update('startState', this.start);
+                    webview.postMessage({ command: 'filteredFinished' });
+                    this.invocationName = GenerationPanel.context.globalState.get('invocationName', this.invocationName);
+                    vscode.commands.executeCommand('alexa-skill-test-robustness.SavePanel', this.invocationName);
+                    resolve();
+                } catch (innerError) {
+                    vscode.window.showErrorMessage("Error after executing the script: " + innerError.message);
+                    reject(innerError);
+                }
+            });
+        });
+    }).then(() => {
+        vscode.window.showInformationMessage("Script execution and post-processing completed successfully.");
+    }).catch(error => {
+        vscode.window.showErrorMessage("An error occurred during script execution or post-processing:", error);
+    });
+}
   private async findFilesWithTimeout(include: vscode.GlobPattern, exclude?: vscode.GlobPattern, maxResults?: number, timeoutMillis?: number): Thenable<vscode.Uri[]> {
     const tokenSource = new vscode.CancellationTokenSource();
     const timeout = timeoutMillis ? setTimeout(() => tokenSource.cancel(), timeoutMillis) : undefined;
@@ -234,25 +251,28 @@ export class HelloWorldPanel {
     });
 
   }
-
   private async postSeed(webview: vscode.Webview) {
     try {
-      const jsonFile = await this.findFilesWithTimeout('**/skill-package/interactionModels/custom/en-US.json', '**/node_modules/**', 1, this.timeoutMillis);
+      const jsonFiles = await this.findFilesWithTimeout('**/skill-package/interactionModels/custom/en-US.json', '**/node_modules/**', 1, this.timeoutMillis);
+      if (jsonFiles.length === 0) {
+        throw new Error("JSON file not found.");
+      }
+      const jsonFileUri = jsonFiles[0];
       let allSamples = [];
-
-    
-        const jsonFileContent = await vscode.workspace.fs.readFile(jsonFileUri);
-        const jsonString = new TextDecoder().decode(jsonFileContent);
-        const fileJsonObject = JSON.parse(jsonString);
-
-
-        if (fileJsonObject && fileJsonObject.interactionModel && fileJsonObject.interactionModel.languageModel && fileJsonObject.interactionModel.languageModel.intents) {
-              allSamples.push(...fileJsonObject.interactionModel.languageModel.intents);
-        } else {
-          throw new Error("Invalid or missing JSON file structure");
-        }
+  
+      const jsonFileContent = await vscode.workspace.fs.readFile(jsonFileUri);
+      const jsonString = new TextDecoder().decode(jsonFileContent);
+      const fileJsonObject = JSON.parse(jsonString);
       
-
+      if (fileJsonObject && fileJsonObject.interactionModel && fileJsonObject.interactionModel.languageModel && fileJsonObject.interactionModel.languageModel.intents) {
+        let invocationName = fileJsonObject.interactionModel.languageModel.invocationName;
+        this.invocationName = invocationName.toString();
+        GenerationPanel.context.globalState.update('invocationName', this.invocationName);
+        allSamples.push(...fileJsonObject.interactionModel.languageModel.intents);
+      } else {
+        throw new Error("Invalid or missing JSON file structure");
+      }
+  
       if (allSamples.length === 0) {
         throw new Error("No seeds found in JSON file intents.");
       } else {
@@ -262,8 +282,8 @@ export class HelloWorldPanel {
       vscode.window.showErrorMessage("Error loading file: " + error.message);
       webview.postMessage({ command: 'JsonFileNotFound' });
     }
-
   }
+  
   private async showQuickPick(array): Promise<string | undefined> {
     const intent = await vscode.window.showQuickPick(array, {
       placeHolder: "Choose an intent"
@@ -286,10 +306,7 @@ export class HelloWorldPanel {
       });
     
   }
-  
-
-
-  private _setWebviewMessageListener(webview: vscode.Webview) {
+ private _setWebviewMessageListener(webview: vscode.Webview) {
     let absoluteScriptPath = path.join(__dirname, '/implementations/VUI-UPSET.jar');
     webview.onDidReceiveMessage(
       async (message: any) => {
@@ -310,24 +327,21 @@ export class HelloWorldPanel {
           case 'errorMessage':
             vscode.window.showErrorMessage(text);
             break;
-          case 'SliderValue':
-            this.ScoreSeed = value / 100;
-            break;
           case 'createTxtFile':
-            this.CreateTxtFile(text, webview);
+            this.CreateJsonFile(text, webview);
             break;
           case 'VUI-UPSET':
               this.runScript(`java -jar ${quoteSpaces(absoluteScriptPath)} ${quoteSpaces(this.TextFilePath)} ${quoteSpaces(this.outputPath)}`, webview);
             break;
           case 'buttonEnable':
-            this.start = false;
-        HelloWorldPanel.context.globalState.update('startState', this.start);
-            // this.start = HelloWorldPanel.context.globalState.get('startState', false);
-            console.log(this.start);
+             this.start = GenerationPanel.context.globalState.get('startState', false);
             await webview.postMessage({
               command: 'button',
               Boolean: this.start
             });
+            break;
+            case'SkillName':
+            this.saveInvocationName(text);
             break;
             
         }
@@ -336,6 +350,8 @@ export class HelloWorldPanel {
       this._disposables
     );
   }
+  private saveInvocationName(text){
+    this.invocationName=text;
+    GenerationPanel.context.globalState.update('invocationName', this.invocationName);
+  }
 }
-/*const tester = new AlexaUtteranceTester('./path/to/your/file.json', 'your-skill-id');
-tester.runSimulations();*/

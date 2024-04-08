@@ -136,3 +136,42 @@ input[type="range"]::-webkit-slider-thumb {
 .hidden {
   display: none;
 }
+#saveName{
+  margin-bottom: 10px;
+}
+/* Aggiunte al tuo CSS esistente */
+.result-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--vscode-panel-border);
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.result-intent {
+  flex-basis: 30%;
+}
+
+.result-considered-intent {
+  flex-basis: 30%;
+}
+
+.result-status {
+  flex-basis: 20%;
+  text-align: center;
+  color: green; /* Colore di default per success */
+}
+
+.result-status.failed {
+  color: red;
+}
+
+.result-json {
+  margin-top: 10px;
+  background-color: var(--vscode-textCodeBlock-background);
+  color: var(--vscode-textPreformat-foreground);
+  padding: 10px;
+  white-space: pre-wrap;
+  overflow-x: auto;
+}

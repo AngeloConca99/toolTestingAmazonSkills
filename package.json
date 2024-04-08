@@ -1,10 +1,10 @@
 {
-  "name": "alexa-skill-test-robustness",
-  "displayName": "Alexa-Skill-Test-Robustness",
-  "version": "0.0.1",
-  "description": "Descrizione dell'estensione",
-  "publisher": "il_tuo_nome_pubblicatore",
-  "id": "il_tuo_nome_pubblicatore.alexa-skill-test-robustness",
+  "name": "SkillForge",
+  "displayName": "SkillForge",
+  "version": "1.0.0",
+  "description": "Testing robustness skill",
+  "publisher": "Angelo_Conca",
+  "id": "Angelo_Conca.SkillForge",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -17,8 +17,8 @@
       "activitybar": [
         {
           "id": "alexaSkillTestRobustnessContainer",
-          "title": "Alexa Skill Test",
-          "icon": "$(file)"
+          "title": "SkillForge",
+          "icon": "./icon/skillTesting.svg"
         }
       ]
     },
@@ -26,25 +26,35 @@
       "alexaSkillTestRobustnessContainer": [
         {
           "id": "alexaSkillTestRobustnessView",
-          "name": "Test Overview"
+          "name": "Overview"
         }
       ]
     },
     "commands": [
       {
-        "command": "alexa-skill-test-robustness.helloWorld",
-        "title": "Inizializzazione"
+        "command": "alexa-skill-test-robustness.GenerationPanel",
+        "title": "SkillForge.GenerationPanel"
       },
       
       {
         "command": "alexa-skill-test-robustness.openReadme",
-        "title": "README"
+        "title": "SkillForge.openReadme"
       },
 
       {
-        "command": "alexa-skill-test-robustness.secondPanel",
-        "title": "Second Panel"
+        "command": "alexa-skill-test-robustness.SavePanel",
+        "title": "SkillForge.savePanel"
+      },
+      {
+        "command": "alexa-skill-test-robustness.TestingPanel",
+        "title": "SkillForge.TestingPanel"
+      },
+      {
+        "command": "alexa-skill-test-robustness.resultPanel",
+        "title": " qwertyuhgjdsjhadvjk"
       }
+      
+
     ]
   },
   "scripts": {
@@ -67,11 +77,12 @@
     "@vscode/test-electron": "^2.3.9",
     "esbuild": "^0.20.0",
     "eslint": "^8.56.0",
-    "typescript": "^5.3.3",
-    "fs-extra": "^11.2.0"
+    "fs-extra": "^11.2.0",
+    "typescript": "^5.3.3"
   },
   "dependencies": {
     "@types/html": "^1.0.4",
-    "@vscode/webview-ui-toolkit": "^1.4.0"
-    }
+    "@vscode/webview-ui-toolkit": "^1.4.0",
+    "axios": "^1.6.7"
+  }
 }

@@ -19,8 +19,6 @@ let startButtonDisable = true;
 let slideValueGlobal = 0;
 const startButton = document.getElementById('start');
 const resetButton = document.getElementById('reset');
-// const slider = document.getElementById('slider') as Slider;
-// const sliderValue = document.getElementById('sliderValue') as slidevalue;
 
 
 
@@ -33,15 +31,9 @@ async function main() {
   startButton?.addEventListener('click', handleStartClick);
   addSeed?.addEventListener('click', createInsertedCheckbox);
   input?.addEventListener('input', handleFileSelect);
-  // const resetButton = document.getElementById('reset');
+ 
   resetButton?.addEventListener('click', resetSeeds);
-  // sliderValue.addEventListener('input', sliderValueSet);
-  // slider.addEventListener('input', sliderSet);
-  // sliderValue?.attributes.setNamedItem(document.createAttribute('value'));
-  // slider?.attributes.setNamedItem(document.createAttribute('value'));
-  // slider.value = slideValueGlobal.toString();
-  // sliderValue.value = slideValueGlobal;
-  findFile();
+ restoreSeedsState();
 }
 
 document.getElementById('insertedTextContent').addEventListener('keydown', function (event) {
@@ -58,10 +50,6 @@ function handleStartClick() {
     command: 'createTxtFile',
     text: seedsCopy
   });
-  vscode.postMessage({
-    command: 'SliderValue',
-    value: 0
-  });
   saveSeedsState();
 
 }
@@ -77,24 +65,8 @@ function hideProgressRing() {
 
 
 function findFile() {
-  const savedState = localStorage.getItem('seedsState');
-  if (savedState) {
-    const { slideValueGlobal: slideValueSaved, edited_seeds: editedSeed, seeds: savedSeeds, support_Seeds: savedSupportSeeds, unchecked_Seed: uncheckedSeed } = JSON.parse(savedState);
-    slideValueGlobal = slideValueSaved;
-    // setSlider(sliderValue, slider, slideValueSaved);
-    vscode.postMessage({
-      command: 'message',
-      text: " " + savedState
-    });
-    if ((uncheckedSeed.length > 0 || savedSupportSeeds.length > 0 || editedSeed.length > 0) && savedSeeds.length > 0) {
-      restoreSeedsState();
-    } else {
-      vscode.postMessage({ command: 'findFile' });
-    }
-  } else {
     vscode.postMessage({ command: 'findFile' });
   }
-}
 
 function setSamplesAndHideProgress(allSamples, progressRing) {
   createCheckbox(allSamples);
@@ -350,10 +322,16 @@ function handleFileSelect() {
     try {
       const json = JSON.parse(event.target.result);
       const allSamples = [];
+      vscode.postMessage({
+        command:'SkillName',
+        text: json.interactionModel.languageModel.invocationName.toString()
+      });
+    
 
       if (!json || !json.interactionModel || !json.interactionModel.languageModel || !json.interactionModel.languageModel.intents) {
         throw new Error("Invalid JSON file structure");
       }
+    
       allSamples.push(...json.interactionModel.languageModel.intents);
       if (allSamples.length === 0) {
         throw new Error("No seed found in JSON file");
@@ -373,6 +351,7 @@ function handleFileSelect() {
   };
 
   reader.readAsText(file);
+ 
 }
 
 
@@ -394,7 +373,7 @@ function seedLoading(samples) {
 }
 
 function saveSeedsState() {
-  // const isStartButtonDisabled = startButtonDisable;
+ 
   const seedsState = {
     slideValueGlobal: 0,
     edited_seeds: editedSeeds,
@@ -410,12 +389,8 @@ function restoreSeedsState() {
   if (savedState) {
     const { slideValueGlobal: slideValueSaved, edited_seeds: editedSeed, seeds: savedSeeds, support_Seeds: savedSupportSeeds, unchecked_Seed: uncheckedSeed } = JSON.parse(savedState);
     slideValueGlobal = slideValueSaved;
-    // setSlider(sliderValue, slider, slideValueSaved);
-    if ((uncheckedSeed.length > 0 || savedSupportSeeds.length > 0 || editedSeed.length > 0) && savedSeeds.length > 0) {
-      vscode.postMessage({
-        command: 'message',
-        text: "1 " + savedState
-      });
+    
+    if (savedSeeds.length > 0) {
       editedSeeds.push(...editedSeed);
       supportSeeds.push(...savedSupportSeeds);
       uncheckedSeeds.push(...uncheckedSeed);
@@ -485,6 +460,7 @@ function eventListener() {
         vscode.postMessage({
           command: 'buttonEnable'
         });}
+
         break;
       
       case 'button': {
@@ -501,24 +477,6 @@ function eventListener() {
   );
 }
 
-// function sliderSet() {
-//   slideValueGlobal = slider.value;
-//   sliderValue.value = slider.value;
-//   saveSeedsState();
-// }
-
-// function sliderValueSet() {
-//   let value = parseFloat(sliderValue.value);
-//   value = Math.min(100, Math.max(0, value));
-//   sliderValue.value = value;
-//   slideValueGlobal = value;
-//   slider.value = value.toString();
-//   saveSeedsState();
-// }
-// function setSlider(sliderValue, slider, value) {
-//   sliderValue.value = value;
-//   slider.value = value.toString();
-// }
 
 function deepClone(allseeds) {
   if (allseeds === null || typeof allseeds !== 'object') {

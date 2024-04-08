@@ -1,57 +1,166 @@
 import {
-    provideVSCodeDesignSystem, vsCodeButton, Button,
-    vsCodeOption, vsCodeProgressRing, vsCodeTextArea, ProgressRing, vsCodeCheckbox
-  } from "@vscode/webview-ui-toolkit";
+  provideVSCodeDesignSystem, vsCodeButton, Button,
+  vsCodeOption, vsCodeProgressRing, vsCodeTextArea, ProgressRing, vsCodeCheckbox
+} from "@vscode/webview-ui-toolkit";
 
 
 provideVSCodeDesignSystem().register(vsCodeButton(), vsCodeOption(), vsCodeProgressRing(), vsCodeCheckbox(), vsCodeTextArea());
 const vscode = acquireVsCodeApi();
 
 
-let slideValueGlobal = 0;
-let startButtonDisable = true;
+let slideValueGlobal = 75;
 let seeds = [];
 let seedsCopy = [];
-let uncheckedSeeds = [];
-
-const startButton = document.getElementById('start');
+let  uncheckedSeeds=[];
 const slider = document.getElementById('slider');
 const sliderValue = document.getElementById('sliderValue');
-const progressRing = document.getElementById('progressRing');
 
+const TestButton = document.getElementById('Test');
 const contentDiv = document.getElementById('content');
+const delButton=document.getElementById('Del');
 
 window.addEventListener('load', main);
 window.addEventListener('load', eventListener);
 
 async function main() {
-    // const input = document.getElementById('fileInput');
-    // const addSeed = document.getElementById('addSeed');
-    // startButton?.addEventListener('click', handleStartClick);
-    // addSeed?.addEventListener('click', createInsertedCheckbox);
-    // input?.addEventListener('input', handleFileSelect);
-    // const resetButton = document.getElementById('reset');
-    // resetButton?.addEventListener('click', resetSeeds);
-    sliderValue?.addEventListener('input', setSliderValue);
-    slider?.addEventListener('input', setSlider);
+  
+  TestButton?.addEventListener('click', handleTestingClick);
+  delButton?.addEventListener('click',handleDelClick);
+  sliderValue?.addEventListener('input', setSliderValue);
+  slider?.addEventListener('input', setSlider);
+  sliderValue?.attributes.setNamedItem(document.createAttribute('value'));
+  slider?.attributes.setNamedItem(document.createAttribute('value'));
+  slider.value = slideValueGlobal.toString();
+  sliderValue.value = slideValueGlobal;
+  updateInputStyle();
+  restoreUnselect();
+  vscode.postMessage({ command: 'findFile' });
+}
+function handleDelClick(){
+  vscode.postMessage({
+    command: 'Del'
+  });
+}
 
-    sliderValue?.attributes.setNamedItem(document.createAttribute('value'));
-    slider?.attributes.setNamedItem(document.createAttribute('value'));
-    slider.value = slideValueGlobal.toString();
-    sliderValue.value = slideValueGlobal;
-    
-    vscode.postMessage({ command: 'findFile' });
+function handleTestingClick() {
+  vscode.postMessage({
+    command: 'StartTesting',
+    value: seedsCopy
+  });
+}
+function updateInputStyle() {
+  const value = parseInt(slider.value, 10);
+
+  slider?.classList.remove("highlight");
+  sliderValue?.classList.remove("highlight");
+
+  if (value === 75) {
+    slider?.classList.add("highlight");
+    sliderValue?.classList.add("highlight");
   }
+}
+function eventListener() {
+  window.addEventListener('message', event => {
+    const message = event.data;
+    const command = message.command;
+    const samples = message.samples;
+    const buttonEnable = message.Boolean;
+    const Value=message.value;
+
+    switch (command) {
+      case 'JsonFile': {
+        seedLoading(samples);
+      }
+        break;
+      case 'Button': {
+        if (buttonEnable) {
+          TestButton.removeAttribute('disabled');
+
+        } else {
+          TestButton.setAttribute('disabled', '');
+        }
+      }
+        break;
+
+    }
+  });
+}
+function setSamplesAndHideProgress(allSamples) {
+  const progressRing = document.getElementById('progressRing1');
+  progressRing?.classList.add('hidden');
+  createCheckbox(allSamples);
+}
+
+function createCheckbox(allSamples) {
+  
+  seeds.push(...allSamples);
+  seedsCopy = deepClone(allSamples);
+
+  const labelLeft = document.createElement('label');
+  labelLeft.textContent = "Seed sentences:\n";
+  const leftContainer = document.querySelector('.left-container');
+  leftContainer?.appendChild(labelLeft);
+
+  const labelRight = document.createElement('label');
+  labelRight.textContent = "Seed sentences:\n";
+  const rightContainer = document.querySelector('.right-container');
+  rightContainer?.appendChild(labelRight);
 
 
 
-// *** SLIDER METHODS ***
+  seeds.forEach((seed,index) => {
+    const checkbox = document.createElement('vscode-checkbox');
+    if (!uncheckedSeeds.includes(seed.generate)) {
+      checkbox.setAttribute('checked', '');
+    } else {
+      let seedindex= seedsCopy.findIndex(item => item.generate === seed.generate);
+      if(seedindex>-1){
+      seedsCopy.splice(seedindex, 1);}
+    } 
+    checkbox.setAttribute('data-score', seed.score.toString());
+    checkbox.textContent = seed.generate + " (" + seed.intent + ")";
+    checkbox.addEventListener('click', () => {
+      if (checkbox.checked) {
+       let seedindex= seedsCopy.findIndex(item => item.generate === seed.generate);
+        if(seedindex>-1){
+        seedsCopy.splice(seedindex, 1);}
+        if(!uncheckedSeeds.includes(seed.generate)){
+          uncheckedSeeds.push(seed.generate);
+        }
+        saveSeedsState();
+      } else {
+        seedsCopy.push(seed);
+        let indexun = uncheckedSeeds.indexOf(seed.generate);
+        if (indexun > -1) {
+          uncheckedSeeds.splice(indexun, 1);
+        }
+        saveSeedsState();
+      }
+      
+    });
+    if (index % 2 === 0) {
+      leftContainer?.appendChild(checkbox);
+    } else {
+      rightContainer?.appendChild(checkbox);
+    }});
+    TestIsEnable();
+    updateCheckboxesVisibility();
+   
+}
+let debounceTimer;
 
 function setSlider() {
   slideValueGlobal = slider.value;
   sliderValue.value = slider.value;
-//   saveSeedsState();
+  clearTimeout(debounceTimer);
+  updateInputStyle();
+  debounceTimer = setTimeout(() => {
+    updateCheckboxesVisibility();
+  }, 300);
 }
+
+
+let sliderTimeout;
 
 function setSliderValue() {
   let value = parseFloat(sliderValue.value);
@@ -59,76 +168,83 @@ function setSliderValue() {
   sliderValue.value = value;
   slideValueGlobal = value;
   slider.value = value.toString();
-//   saveSeedsState();
+  updateInputStyle();
+  clearTimeout(sliderTimeout);
+  sliderTimeout = setTimeout(() => {
+    updateCheckboxesVisibility();
+  }, 300); 
+}
+function updateSliderValue(newValue) {
+  let value = parseFloat(newValue);
+  value = Math.min(100, Math.max(0, value));
+  slideValueGlobal = value;
+  slider.value = value.toString();
+  sliderValue.value = value;
+  clearTimeout(debounceTimer);
+  updateInputStyle();
+  debounceTimer = setTimeout(() => {
+      updateCheckboxesVisibility();
+  }, 10);
 }
 
-// function resetSlider(sliderValue, slider, value) {
-//   sliderValue.value = value;
-//   slider.value = value.toString();
-// }
+function updateCheckboxesVisibility() {
+  let sliderScore = parseFloat(slider.value); 
+  sliderScore=sliderScore/100;
+  const allCheckboxes = document.querySelectorAll('vscode-checkbox');
 
-// 
-// *** EVENT LISTENER ***
-// 
+  
+  seedsCopy = deepClone(seeds);
 
-function eventListener(){
-    window.addEventListener('message', event => {
-    const message = event.data;
-    const command = message.command;
-    const samples = message.samples;
-    const buttonEnable = message.Boolean;
+  seedsCopy = seedsCopy.filter(seed => !uncheckedSeeds.includes(seed.generate));
 
-    switch(command){
-      case 'JsonFile':{
-        seedLoading(samples);
-        break;
+  allCheckboxes.forEach(checkbox => {
+    let checkboxScore = parseFloat(checkbox.getAttribute('data-score'));
+    if (checkboxScore < sliderScore) {
+      checkbox.style.display = 'none'; 
+      
+      const seedToRemove = seedsCopy.find(seed => seed.generate + " (" + seed.intent + ")" === checkbox.textContent);
+      if (seedToRemove) {
+        const index = seedsCopy.indexOf(seedToRemove);
+        if (index > -1) {
+          seedsCopy.splice(index, 1); 
+        }
       }
+
+    } else {
+      checkbox.style.display = ''; 
     }
-    });
-  }
-    
-  
-
-// 
-//  *** GRAPHIC METHODS ***
-//
-
-function setSamplesAndHideProgress(allSamples) {
-  progressRing?.classList.add('hidden');
-  startButton?.removeAttribute('disabled');
-  hideProgressRing();
-  createCheckbox(allSamples);
+  });
+  saveSeedsState();
 }
 
-function hideProgressRing() {
-  progressRing?.classList.add('hidden');
-  startButtonDisable = true;
-  
+function saveSeedsState() {
+
+  const Unselect = {
+    Slider_Value: slideValueGlobal,
+    Unselect_Seed: uncheckedSeeds,
+  };
+  localStorage.setItem('Unselect', JSON.stringify(Unselect));
 }
 
-function createCheckbox(allSamples) {
-  seeds.push(...allSamples);
-  seedsCopy = deepClone(allSamples);
-  
-  const label = document.createElement('label');
-  label.textContent = "Seed sentences:\n";
-  contentDiv?.appendChild(label);
+function restoreUnselect() {
+  const savedState = localStorage.getItem('Unselect');
+  if (savedState) {
+    const {Slider_Value: sliderValue, Unselect_Seed: unselectSeed } = JSON.parse(savedState);
+    if(sliderValue){
+    slideValueGlobal = sliderValue;}
+    updateSliderValue(slideValueGlobal);
+    if (unselectSeed.length > 0) {
+      uncheckedSeeds.push(...unselectSeed);
+    }
+}}
 
-  seeds.forEach((seed) => {
-    const checkbox = document.createElement('vscode-checkbox');
-    checkbox.setAttribute('checked', '');
-    
-    checkbox.textContent = seed.generate + " (" + seed.intent + ")";
-    checkbox.addEventListener('click', () => {
-      if(checkbox.hasAttribute('checked')){
-        seedsCopy.splice(seedsCopy.indexOf(seed), 1);
-      } else {
-        seedsCopy.push(seed);
-      }
-    });
-    contentDiv?.appendChild(checkbox);
+function TestIsEnable(){
+  vscode.postMessage({
+    command:'TestingButton'
+
   });
 }
+
 
 function deepClone(allseeds) {
   if (allseeds === null || typeof allseeds !== 'object') {
@@ -158,7 +274,6 @@ function deepClone(allseeds) {
 
 function seedLoading(samples) {
   try {
-    // const progressRing = document.getElementById('progressRing');
     setSamplesAndHideProgress(samples);
   } catch (error) {
     vscode.postMessage({
