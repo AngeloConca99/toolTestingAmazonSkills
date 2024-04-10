@@ -65,14 +65,7 @@ export class resultPanel {
         </head>
         <body>
         <div id="container">
-    
-        <div class="left-container">
-            <div id="content"></div>
-        </div>
-        
-        <div class="right-container">
-            <div id="insertedContent"></div>
-        </div>
+    <div id="content"></div>
     </div>
     <vscode-button  id="start">Save Result</vscode-button>
     <div id="resultsContainer"></div>
